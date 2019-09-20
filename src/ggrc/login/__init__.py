@@ -12,16 +12,14 @@ import json
 import logging
 import re
 from functools import wraps
-from werkzeug.exceptions import Forbidden
 
 import flask_login
-from flask import g
-from flask import request
-from flask import redirect
+from flask import g, redirect, request, session
+from werkzeug.exceptions import Forbidden
+from werkzeug.security import check_password_hash as check_hash
+
 from ggrc.extensions import get_extension_module_for
 from ggrc.rbac import SystemWideRoles
-from ggrc import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +29,17 @@ def get_login_module():
 
 
 def user_loader(user_id):
-  """Returns the auth user by user_id"""
+  """Returns the auth user by user_id
+
+  Retrieves the user by user_id from the database and verifies
+  the user has the same email by checking user_email_hash
+  """
   from ggrc.utils.user_generator import find_user_by_id
   user = find_user_by_id(user_id)
-  if user and settings.DEBUG:
-    from google.appengine.api import users
-    try:
-      ae_user = users.get_current_user()
-    except AssertionError:
-      ae_user = None
-    if ae_user and ae_user.email() != user.email:
-      return None
-  return user
+  user_email_hash = session.get('user_email_hash')
+
+  return user if user and user_email_hash and check_hash(
+      user_email_hash, user.email) else None
 
 
 def init_app(app):
@@ -53,6 +50,7 @@ def init_app(app):
 
   login_manager = flask_login.LoginManager()
   login_manager.init_app(app)
+
   # login_manager.session_protection = 'strong'
 
   # pylint: disable=unused-variable
@@ -155,6 +153,7 @@ def admin_required(func):
   Raises:
      Forbidden: if the current user is not an admin.
   """
+
   @wraps(func)
   def admin_check(*args, **kwargs):
     """Helper function that performs the admin check"""
@@ -163,6 +162,7 @@ def admin_required(func):
     if role not in SystemWideRoles.admins:
       raise Forbidden()
     return func(*args, **kwargs)
+
   return admin_check
 
 
