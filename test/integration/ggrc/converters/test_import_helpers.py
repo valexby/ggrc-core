@@ -301,7 +301,7 @@ class TestGetObjectColumnDefinitions(TestCase):
       Raises:
         AssertionError if object definition contains the wrong handler.
       """
-      handlers = column_handlers.COLUMN_HANDLERS
+      handlers = column_handlers.aggregate_column_handlers(obj)
       column_definitions = import_helper.get_object_column_definitions(obj)
       for key, value in column_definitions.items():
         if key in handlers:
@@ -437,7 +437,7 @@ class TestGetObjectColumnDefinitions(TestCase):
         "Priority",
         "Issue Type",
         "Ticket Tracker Integration",
-        "SOX 302 assessment workflow",
+        "Verification Workflow",
     }
     expected_fields = {
         "mandatory": {
@@ -503,7 +503,7 @@ class TestGetObjectColumnDefinitions(TestCase):
         "Issue Type",
         "Ticket Title",
         "Ticket Tracker Integration",
-        "SOX 302 assessment workflow",
+        "Verification Workflow",
     }
     expected_fields = {
         "mandatory": {
