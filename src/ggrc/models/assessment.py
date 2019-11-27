@@ -3,44 +3,51 @@
 
 """Module for Assessment object"""
 
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import validates
-from sqlalchemy import orm
-import sqlalchemy as sa
+from sqlalchemy import ext, orm, and_
 
-from ggrc import db
-from ggrc import utils
+from ggrc import (
+    db,
+    utils,
+)
 from ggrc.builder import simple_property
 from ggrc.fulltext import mixin
-from ggrc.models.comment import Commentable
-from ggrc.models import audit
-from ggrc.models import assessment_template
-from ggrc.models import custom_attribute_definition
-from ggrc.models.mixins import with_last_comment
+
+from ggrc.models import (
+    audit,
+    comment,
+    custom_attribute_definition,
+    reflection,
+    object_person,
+    relationship,
+    deferred,
+    review_level,
+    assessment_template,
+)
+
+from ggrc.models.mixins import (
+    with_last_comment,
+    base,
+    BusinessObject,
+    CustomAttributable,
+    FinishedDate,
+    Notifiable,
+    TestPlanned,
+    LastDeprecatedTimeboxed,
+    VerifiedDate,
+    reminderable,
+    statusable,
+    labeled,
+    issue_tracker,
+    rest_handable,
+    with_custom_restrictions,
+)
+
 from ggrc.models.mixins.audit_relationship import AuditRelationship
-from ggrc.models.mixins import base
-from ggrc.models.mixins import BusinessObject
-from ggrc.models.mixins import CustomAttributable
-from ggrc.models.mixins import FinishedDate
-from ggrc.models.mixins import Notifiable
-from ggrc.models.mixins import TestPlanned
-from ggrc.models.mixins import LastDeprecatedTimeboxed
-from ggrc.models.mixins import VerifiedDate
-from ggrc.models.mixins import reminderable
-from ggrc.models.mixins import rest_handable
-from ggrc.models.mixins import statusable
-from ggrc.models.mixins import labeled
-from ggrc.models.mixins import issue_tracker as issue_tracker_mixins
-from ggrc.models.mixins import with_custom_restrictions
 from ggrc.models.mixins.assignable import Assignable
 from ggrc.models.mixins.autostatuschangeable import AutoStatusChangeable
 from ggrc.models.mixins.with_action import WithAction
 from ggrc.models.mixins.with_evidence import WithEvidence
 from ggrc.models.mixins.with_similarity_score import WithSimilarityScore
-from ggrc.models.deferred import deferred
-from ggrc.models.object_person import Personable
-from ggrc.models import reflection
-from ggrc.models.relationship import Relatable
 from ggrc.integrations import constants
 
 
@@ -52,10 +59,10 @@ class Assessment(
     TestPlanned,
     CustomAttributable,
     WithEvidence,
-    Commentable,
-    Personable,
+    comment.Commentable,
+    object_person.Personable,
     reminderable.Reminderable,
-    Relatable,
+    relationship.Relatable,
     LastDeprecatedTimeboxed,
     WithSimilarityScore,
     FinishedDate,
@@ -64,7 +71,7 @@ class Assessment(
     WithAction,
     labeled.Labeled,
     with_last_comment.WithLastComment,
-    issue_tracker_mixins.IssueTrackedWithUrl,
+    issue_tracker.IssueTrackedWithUrl,
     base.ContextRBAC,
     BusinessObject,
     with_custom_restrictions.WithCustomRestrictions,
@@ -100,16 +107,23 @@ class Assessment(
       }
   }
 
-  design = deferred(db.Column(db.String, nullable=False, default=""),
-                    "Assessment")
-  operationally = deferred(db.Column(db.String, nullable=False, default=""),
-                           "Assessment")
-  audit_id = deferred(
+  design = deferred.deferred(
+      db.Column(db.String, nullable=False, default=""),
+      "Assessment",
+  )
+  operationally = deferred.deferred(
+      db.Column(db.String, nullable=False, default=""),
+      "Assessment",
+  )
+  audit_id = deferred.deferred(
       db.Column(db.Integer, db.ForeignKey('audits.id'), nullable=False),
-      'Assessment')
-  assessment_type = deferred(
+      'Assessment',
+  )
+  assessment_type = deferred.deferred(
       db.Column(db.String, nullable=False, server_default="Control"),
-      "Assessment")
+      "Assessment",
+  )
+
   # whether to use the object test plan on snapshot mapping
   test_plan_procedure = db.Column(db.Boolean, nullable=False, default=True)
 
@@ -122,6 +136,8 @@ class Assessment(
   review_levels_count = db.Column(
       db.Integer,
   )
+
+  review_levels = db.relationship("ReviewLevel")
 
   object = {}  # we add this for the sake of client side error checking
 
@@ -139,8 +155,14 @@ class Assessment(
       'audit',
       'assessment_type',
       'test_plan_procedure',
+      'review_levels',
       reflection.Attribute(
           'verification_workflow',
+          create=False,
+          update=False,
+      ),
+      reflection.Attribute(
+          'review_levels_count',
           create=False,
           update=False,
       ),
@@ -149,12 +171,16 @@ class Assessment(
       reflection.Attribute('object', create=False, update=False),
   )
 
+  _include_links = ["review_levels"]
+  _update_raw = ["review_levels"]
+
   _fulltext_attrs = [
       'archived',
       'design',
       'operationally',
       'folder',
       'verification_workflow',
+      'review_levels_count'
   ]
 
   AUTO_REINDEX_RULES = [
@@ -312,6 +338,11 @@ class Assessment(
     from ggrc.converters.handlers import handlers
     return {"verification_workflow": handlers.TextColumnHandler}
 
+  # pylint: disable=no-self-use
+  def set_raw_review_levels(self, review_level_dicts):
+    for review_level_dict in review_level_dicts or []:
+      review_level.ReviewLevel.find_and_update(review_level_dict)
+
   @classmethod
   def _ignore_filter(cls, _):
     return None
@@ -322,7 +353,7 @@ class Assessment(
         orm.Load(cls).undefer_group("Assessment_complete"),
         orm.Load(cls).joinedload("audit").undefer_group("Audit_complete"),
         orm.Load(cls).joinedload("audit").joinedload(
-            audit.Audit.issuetracker_issue
+            audit.Audit.issuetracker_issue,
         ),
     )
 
@@ -424,7 +455,7 @@ class Assessment(
   def folder(self):
     return self.audit.folder if self.audit else ""
 
-  @declared_attr
+  @ext.declarative.declared_attr
   def object_level_definitions(cls):  # pylint: disable=no-self-argument
     """Set up a backref so that we can create an object level custom
        attribute definition without the need to do a flush to get the
@@ -436,7 +467,7 @@ class Assessment(
     current_type = cls.__name__
 
     def join_expr():
-      return sa.and_(
+      return and_(
           orm.foreign(orm.remote(cad.definition_id)) == cls.id,
           cad.definition_type == utils.underscore_from_camelcase(current_type),
       )
@@ -461,7 +492,7 @@ class Assessment(
         cascade="all, delete-orphan",
     )
 
-  @validates("status")
+  @orm.validates("status")
   def validate_status(self, key, value):
     value = super(Assessment, self).validate_status(key, value)
     # pylint: disable=unused-argument
@@ -476,19 +507,19 @@ class Assessment(
                                ",".join(valid_states)))
     return value
 
-  @validates("operationally")
+  @orm.validates("operationally")
   def validate_opperationally(self, key, value):
     """Validate assessment operationally by validating conclusion"""
     # pylint: disable=unused-argument
     return value if value in self.VALID_CONCLUSIONS else ""
 
-  @validates("design")
+  @orm.validates("design")
   def validate_design(self, key, value):
     """Validate assessment design by validating conclusion"""
     # pylint: disable=unused-argument
     return value if value in self.VALID_CONCLUSIONS else ""
 
-  @validates("assessment_type")
+  @orm.validates("assessment_type")
   def validate_assessment_type(self, key, value):
     """Validate assessment type to be the same as existing model name"""
     # pylint: disable=unused-argument
@@ -499,6 +530,28 @@ class Assessment(
           "Assessment type '{}' is not snapshotable".format(value)
       )
     return value
+
+  def create_review_levels(self):
+    """
+      Create review levels for assessment when it is generated
+      from assessment template.
+    """
+
+    if self.review_levels:
+      return
+
+    if self.verification_workflow == \
+      assessment_template.VerificationWorkflow.MLV:  # noqa
+
+      for level_number in range(1, self.review_levels_count + 1):
+        db.session.add(
+            review_level.ReviewLevel(
+                level_number=level_number,
+                assessment_id=self.id,
+                context_id=self.context_id,
+            ),
+        )
+        db.session.commit()
 
   def log_json(self):
     out_json = super(Assessment, self).log_json()
