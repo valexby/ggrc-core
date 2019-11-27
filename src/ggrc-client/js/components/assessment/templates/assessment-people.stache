@@ -27,12 +27,33 @@
         conflictRoles:from="conflictRoles">
       </assessment-custom-roles>
     {{else}}
-      <custom-roles-modal
-        instance:from="instance"
-        orderOfRoles:from="orderOfRoles"
-        conflictRoles:from="conflictRoles"
-        isNewInstance:from="isNewInstance">
-      </custom-roles-modal>
+      {{#is_ML_verification_flow instance}}
+        <custom-roles-modal
+          instance:from="instance"
+          orderOfRoles:from="orderOfRoles"
+          conflictRoles:from="conflictRoles"
+          isNewInstance:from="isNewInstance"
+          includeRoles:from="mainRoles"
+        />
+
+        {{! Render verifiers between Creators\Assignees and other roles}}
+        <assessment-verifiers-modal instance:from="instance"/>
+
+        <custom-roles-modal
+          instance:from="instance"
+          orderOfRoles:from="orderOfRoles"
+          conflictRoles:from="conflictRoles"
+          isNewInstance:from="isNewInstance"
+          excludeRoles:from="mainRoles"
+        />
+      {{else}}
+        <custom-roles-modal
+          instance:from="instance"
+          orderOfRoles:from="orderOfRoles"
+          conflictRoles:from="conflictRoles"
+          isNewInstance:from="isNewInstance"
+        />
+      {{/is_ML_verification_flow}}
     {{/if}}
   </div>
 </div>

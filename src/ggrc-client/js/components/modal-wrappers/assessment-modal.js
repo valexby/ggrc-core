@@ -6,6 +6,7 @@
 import '../assessment-template-attributes/assessment-template-attributes';
 import '../assessment-templates/assessment-templates-dropdown/assessment-templates-dropdown';
 import '../spinner-component/spinner-component';
+import '../assessment/assessment-verifiers/assessment-verifiers-modal';
 import canComponent from 'can-component';
 import MappingOperationsVM from '../view-models/mapping-operations-vm';
 import {
@@ -42,6 +43,7 @@ export default canComponent.extend({
     assessmentTemplate: null,
     isAttributesLoading: false,
     fields: ['id', 'type', 'child_type', 'revision', 'title', 'name', 'email'],
+    assessmentMainRoles: ['Creators', 'Assignees', 'Verifiers'],
     loadData() {
       return this.attr('instance').getRelatedObjects()
         .then((data) => {

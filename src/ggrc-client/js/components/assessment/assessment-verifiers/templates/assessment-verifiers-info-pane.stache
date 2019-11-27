@@ -17,10 +17,10 @@
         verifiersGroup:from="."
       >
         <editable-people-group
-          on:vm:unmap="removePerson(scope.event)"
+          on:vm:unmap="removePerson(scope.event.person)"
           on:vm:changeEditableMode="changeEditableGroup(scope.event)"
           on:vm:saveChanges="saveChanges()"
-          on:vm:personSelected="personSelected(scope.event)"
+          on:vm:personSelected="personSelected(scope.event.person)"
           canUnmap:from="canEdit"
           canEdit:from="canEdit"
           isLoading:from="isLoading"
