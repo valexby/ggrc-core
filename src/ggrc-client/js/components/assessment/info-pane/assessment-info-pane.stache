@@ -241,8 +241,9 @@
                     {{/unless}}
                 </div>
                 <div class="info-pane__section">
-                    <assessment-people instance:from="instance"
-                      mainRoles:from="assessmentMainRoles"
+                    <assessment-people
+                      instance:from="instance"
+                      isSecondaryRoles:from="false"
                       deferredSave:from="deferredSave"
                       onStateChangeDfd:from="onStateChangeDfd"
                       setInProgress:from="@setInProgressState"
@@ -346,11 +347,14 @@
                      class="assessment-attributes-panel"
                      on:updateActiveTab="initGlobalAttributes">
               <div class="assessment-attributes-panel">
-                <custom-roles excludeRoles:from="assessmentMainRoles"
+                <assessment-people
                     instance:from="instance"
+                    isSecondaryRoles:from="true"
                     deferredSave:from="deferredSave"
-                    readOnly:from="isRestricted">
-                </custom-roles>
+                    onStateChangeDfd:from="onStateChangeDfd"
+                    setInProgress:from="@setInProgressState"
+                    isReadonly:from="isRestricted">
+                </assessment-people>
                 <assessment-custom-attributes on:onUpdateAttributes="saveGlobalAttributes(scope.event)"
                                               items:from="globalAttributes"
                                               isEditDenied:from="isRestricted"

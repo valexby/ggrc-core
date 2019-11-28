@@ -86,7 +86,6 @@
       <div class="ggrc-form-item__row">
       <assessment-people instance:from="instance"
                           infoPaneMode:from="false"
-                          mainRoles:from="assessmentMainRoles"
                           isNewInstance:from="new_object_form">
       </assessment-people>
       </div>

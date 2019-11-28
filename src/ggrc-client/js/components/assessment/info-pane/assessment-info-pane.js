@@ -275,7 +275,6 @@ export default canComponent.extend({
     previousStatus: undefined,
     initialState: 'Not Started',
     deprecatedState: 'Deprecated',
-    assessmentMainRoles: ['Creators', 'Assignees', 'Verifiers'],
     commentsTotalCount: 0,
     commentsPerPage: 10,
     newCommentsCount: 0,

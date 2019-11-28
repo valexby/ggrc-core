@@ -43,7 +43,6 @@ export default canComponent.extend({
     assessmentTemplate: null,
     isAttributesLoading: false,
     fields: ['id', 'type', 'child_type', 'revision', 'title', 'name', 'email'],
-    assessmentMainRoles: ['Creators', 'Assignees', 'Verifiers'],
     loadData() {
       return this.attr('instance').getRelatedObjects()
         .then((data) => {
