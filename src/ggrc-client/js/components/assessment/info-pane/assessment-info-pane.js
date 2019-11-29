@@ -83,6 +83,7 @@ import {
   isMultiLevelFlow,
   getInReviewLevel,
 } from '../../../plugins/utils/verification-flow-utils';
+import '../assessment-verifiers/assessment-verifiers-info-pane';
 
 const SEMI_RESTRICTED_STATUSES = ['Deprecated', 'Completed'];
 

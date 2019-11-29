@@ -1,0 +1,62 @@
+{{!
+  Copyright (C) 2019 Google Inc.
+  Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+}}
+
+<assessment-verifiers instance:from="instance">
+  <div class="people-groups">
+    {{#verifiersGroups}}
+      <assessment-verifiers-group
+        class="people-group"
+        on:vm:saveVerifiers="saveVerifiers(scope.event)"
+        updatableGroupId:from="updatableGroupId"
+        readonly:from="isReadonly"
+        groupTitle:from="groupTitle"
+        levelNumber:from="levelNumber"
+        people:from="people"
+        verifiersGroup:from="."
+      >
+        <editable-people-group
+          on:vm:unmap="removePerson(scope.event)"
+          on:vm:changeEditableMode="changeEditableGroup(scope.event)"
+          on:vm:saveChanges="saveChanges()"
+          on:vm:personSelected="personSelected(scope.event)"
+          canUnmap:from="canEdit"
+          canEdit:from="canEdit"
+          isLoading:from="isLoading"
+          updatableGroupId:from="updatableGroupId"
+          groupId:from="levelNumber"
+          people:from="people"
+          title:from="groupTitle"
+        >
+          <editable-people-group-header
+            editableMode:from="editableMode"
+            isLoading:from="isLoading"
+            canEdit:from="canEdit"
+            title:from="title"
+            people:from="people"
+            on:vm:editPeopleGroup="changeEditableMode(true)"
+          >
+            <can-template name="additional-header-info">
+              <div class="assessment-verifiers-group-header">
+                <div class="state-value-dot {{addclass 'state' reviewState}}">
+                  {{reviewState}}
+                </div>
+                {{#eq (reviewState, "Reviewed")}}
+                  <div class="review-info">
+                    Reviewed by
+                    <person-data
+                      class="inline-block"
+                      personId:from="verifiedBy"
+                    />
+                    on {{dateTime completedAt}}
+                  </div>
+                {{/eq}}
+              </div>
+            </can-template>
+          </editable-people-group-header>
+        </editable-people-group>
+      </assessment-verifiers-group>
+    {{/verifiersGroups}}
+  </div>
+</assessment-verifiers>

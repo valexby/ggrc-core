@@ -249,6 +249,15 @@
                       isReadonly:from="isRestricted">
                     </assessment-people>
                 </div>
+                {{#is_ML_verification_flow instance}}
+                    <div class="info-pane__section">
+                        <assessment-verifiers-info-pane
+                            instance:from="instance"
+                            deferredSave:from="deferredSave"
+                            isReadonly:from="isRestricted"
+                        />
+                    </div>
+                {{/is_ML_verification_flow}}
             </div>
             <div class="info-pane__sidebar">
               <div class="ggrc-form">
