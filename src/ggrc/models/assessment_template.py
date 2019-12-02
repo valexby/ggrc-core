@@ -31,6 +31,7 @@ from ggrc.models.types import JsonType
 from ggrc.services import signals
 from ggrc.fulltext.mixin import Indexed
 from ggrc.rbac.permissions import permissions_for
+from ggrc.integrations import constants
 
 
 # pylint: disable=too-few-public-methods
@@ -272,6 +273,12 @@ class AssessmentTemplate(
           "mandatory": False,
           "ignore_on_update": True,
           "view_only": True,
+      },
+      "issue_severity": {
+          "display_name": "Severity",
+          "mandatory": False,
+          "description": "Allowed values are:\n{}".format(
+              '\n'.join(constants.AVAILABLE_SEVERITIES))
       },
       "enabled": {
           "display_name": "Ticket Tracker Integration",
