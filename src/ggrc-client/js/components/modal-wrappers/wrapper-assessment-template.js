@@ -19,7 +19,7 @@ const VERIFICATION_LEVELS = [
   '2', '3', '4', '5', '6', '7', '8', '9', '10',
 ];
 
-const DEFAULT_REVIEW_LEVEL = '2';
+const DEFAULT_REVIEW_LEVEL = 2;
 
 const PEOPLE_VALUES_OPTIONS = Object.freeze({
   Control: [
@@ -111,6 +111,9 @@ export default canComponent.extend({
           return isMultiLevelVerification;
         },
       },
+    },
+    reviewLevelCountChanged({name}) {
+      this.attr('instance.review_levels_count', Number(name));
     },
   }),
   events: {
