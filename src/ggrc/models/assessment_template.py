@@ -223,7 +223,7 @@ class AssessmentTemplate(
 
   _aliases = {
       "verification_workflow": {
-          "display_name": "Verification Workflow",
+          "display_name": "Assessment Workflow",
           "mandatory": False,
           "description": (
               "Allowed values are:\n"

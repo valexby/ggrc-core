@@ -437,7 +437,7 @@ class TestGetObjectColumnDefinitions(TestCase):
         "Priority",
         "Issue Type",
         "Ticket Tracker Integration",
-        "Verification Workflow",
+        "Assessment Workflow",
         "Verification Levels",
     }
     expected_fields = {
@@ -504,7 +504,7 @@ class TestGetObjectColumnDefinitions(TestCase):
         "Issue Type",
         "Ticket Title",
         "Ticket Tracker Integration",
-        "Verification Workflow",
+        "Assessment Workflow",
         "Verification Levels",
     }
     expected_fields = {
