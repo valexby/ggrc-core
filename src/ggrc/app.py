@@ -145,6 +145,11 @@ def init_views(app_):
   ggrc.views.init_all_views(app_)
 
 
+def init_sox(app_):
+  import ggrc.sox
+  ggrc.sox.init_app(app_)
+
+
 def init_extension_blueprints(app_):
   for extension_module in extensions.get_extension_modules():
     if hasattr(extension_module, 'blueprint'):
@@ -311,6 +316,7 @@ configure_flask_login(app)
 configure_jinja(app)
 init_services(app)
 init_views(app)
+init_sox(app)
 init_extension_blueprints(app)
 init_gdrive_routes(app)
 init_permissions_provider()
