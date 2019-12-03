@@ -45,11 +45,11 @@ Copyright (C) 2019 Google Inc.
                         </span>
                       {{/if}}
                     {{/eq}}
-                    {{#if instance.sox_302_enabled}}
+                    {{#is_sox_302_verification_flow instance}}
                       <span class="pane-header__title-item">
                         <span class="state-value state-sox302">SOX 302</span>
                       </span>
-                    {{/if}}
+                    {{/is_sox_302_verification_flow}}
                     {{#if instance.archived}}
                       <span class="pane-header__title-item">
                         <span class="state-value state-archived">Archived</span>

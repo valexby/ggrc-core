@@ -124,7 +124,7 @@
         </div>
       </div>
       {{#if assessmentTemplate}}
-        {{#if assessmentTemplate.sox_302_enabled}}
+        {{#is_sox_302_verification_flow assessmentTemplate}}
           <div class="ggrc-form-item">
             <div class="ggrc-form-item__row alert alert-nomargin">
               This assessment template enables “302 assessment workflow”:
@@ -136,7 +136,7 @@
               </p>
             </div>
           </div>
-        {{/if}}
+        {{/is_sox_302_verification_flow}}
         <div class="ggrc-form-item">
           <div class="ggrc-form-item__row">
               <label class="ggrc-form-item__label">
