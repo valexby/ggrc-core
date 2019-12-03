@@ -3,7 +3,6 @@
  Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
  */
 
-import loSortBy from 'lodash/sortBy';
 import loHead from 'lodash/head';
 
 const VERIFICATION_FLOWS = {
@@ -33,13 +32,10 @@ const getFlowDisplayName = (instance) => {
   return instance.attr('verification_workflow');
 };
 
-const getFirstUnreviewedLevel = (instance) => {
-  const unreviewedLevels = instance.attr('review_levels')
-    .filter((reviewLevel) => !reviewLevel.verified_by);
-  const sortedByLevelNumber = loSortBy(unreviewedLevels, 'level_number');
-  const firstUnreviewedLevel = loHead(sortedByLevelNumber);
-
-  return firstUnreviewedLevel;
+const getInReviewLevel = (instance) => {
+  const inReviewLevels = instance.attr('review_levels')
+    .filter((reviewLevel) => reviewLevel.status === 'In Review');
+  return loHead(inReviewLevels);
 };
 
 export {
@@ -48,5 +44,5 @@ export {
   isMultiLevelFlow,
   getAssessmentFlows,
   getFlowDisplayName,
-  getFirstUnreviewedLevel,
+  getInReviewLevel,
 };

@@ -81,7 +81,7 @@ import * as businessModels from '../../../models/business-models';
 import {getAjaxErrorInfo} from '../../../plugins/utils/errors-utils';
 import {
   isMultiLevelFlow,
-  getFirstUnreviewedLevel,
+  getInReviewLevel,
 } from '../../../plugins/utils/verification-flow-utils';
 
 const SEMI_RESTRICTED_STATUSES = ['Deprecated', 'Completed'];
@@ -644,8 +644,8 @@ export default canComponent.extend({
       }
 
       const reviewLevelCount = instance.attr('review_levels_count');
-      const firstUnreviewedLevel = getFirstUnreviewedLevel(instance);
-      const levelNumber = firstUnreviewedLevel.level_number;
+      const inReviewLevel = getInReviewLevel(instance);
+      const levelNumber = inReviewLevel.level_number;
 
       const stateDisplayName =
         `${currentState} ${levelNumber} of ${reviewLevelCount}`;
