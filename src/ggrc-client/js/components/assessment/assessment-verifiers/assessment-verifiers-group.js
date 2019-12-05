@@ -34,9 +34,7 @@ export default canComponent.extend({
     removePerson({id}) {
       this.attr('isDirty', true);
 
-      const personIndex = this.attr('people')
-        .serialize()
-        .findIndex((person) => person.id === id);
+      const personIndex = this.getPersonIndexById(id);
 
       this.attr('people').splice(personIndex, 1);
 
@@ -45,6 +43,12 @@ export default canComponent.extend({
       }
     },
     personSelected({id, email}) {
+      const personIndex = this.getPersonIndexById(id);
+
+      if (personIndex !== -1) {
+        return;
+      }
+
       this.attr('isDirty', true);
       this.attr('people').push({id, email});
 
@@ -80,6 +84,11 @@ export default canComponent.extend({
       const backUp = this.attr('backUp').serialize();
       this.attr('backUp', []);
       return backUp;
+    },
+    getPersonIndexById(id) {
+      return this.attr('people')
+        .serialize()
+        .findIndex((person) => person.id === id);
     },
   }),
   events: {
