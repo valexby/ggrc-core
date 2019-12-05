@@ -220,9 +220,6 @@ class TestGetObjectColumnDefinitions(TestCase):
   def setUpClass(cls):
     TestCase.clear_data()
 
-  def setUp(self):
-    pass
-
   def _test_definition_names(self, obj_class, names, has_mappings=True):
     """Test name definitions for one class
 
@@ -440,6 +437,7 @@ class TestGetObjectColumnDefinitions(TestCase):
         "Priority",
         "Issue Type",
         "Ticket Tracker Integration",
+        "SOX 302 assessment workflow",
     }
     expected_fields = {
         "mandatory": {
@@ -505,6 +503,7 @@ class TestGetObjectColumnDefinitions(TestCase):
         "Issue Type",
         "Ticket Title",
         "Ticket Tracker Integration",
+        "SOX 302 assessment workflow",
     }
     expected_fields = {
         "mandatory": {

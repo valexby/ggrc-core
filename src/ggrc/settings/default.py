@@ -59,7 +59,7 @@ except ImportError:
 # for more info) and if the version name were to exceed 30 characters, all
 # deployments would go to the same GAE app version. Please take that into
 # consideration when modifying this string.
-VERSION = "2.21.0-Pumpkin" + BUILD_NUMBER
+VERSION = "2.22.0-Pumpkin" + BUILD_NUMBER
 
 # Migration owner
 MIGRATOR = os.environ.get(
@@ -198,6 +198,14 @@ ISSUE_TRACKER_BUG_URL_TMPL = os.environ.get('ISSUE_TRACKER_BUG_URL_TMPL')
 
 # Flag defining whether we need to mock issue tracker responses
 ISSUE_TRACKER_MOCK = bool(os.environ.get('ISSUE_TRACKER_MOCK'))
+
+# Flag defining whether notifications mechanism is enabled or not.
+# By default notifiactions mechanism is turned ON.
+NOTIFICATIONS_ENABLED = int(os.environ.get("NOTIFICATIONS_ENABLED", "1"))
+
+# Flag defining whether gcalendar sync mechanism is enabled or not.
+# By default gcalendar sync mechanism is turned ON.
+GCALENDAR_ENABLED = int(os.environ.get("GCALENDAR_ENABLED", "1"))
 
 # Dashboard integration
 _DEFAULT_DASHBOARD_INTEGRATION_CONFIG = {
