@@ -98,30 +98,37 @@ export default canComponent.extend({
     define: {
       verifiers: {
         get() {
-          let acl = this.attr('instance.access_control_list');
-          let verifierRoleId = this.attr('_verifierRoleId');
           let verifiers;
+          const instance = this.attr('instance');
 
-          if (!verifierRoleId) {
-            return [];
+          if (!isMultiLevelFlow(instance)) {
+            let acl = instance.attr('access_control_list');
+            let verifierRoleId = this.attr('_verifierRoleId');
+
+            if (!verifierRoleId) {
+              return [];
+            }
+
+            verifiers = acl
+              .filter((item) =>
+                String(item.ac_role_id) === String(verifierRoleId)
+              ).map(
+                // Getter of 'verifiers' is called when access_control_list(ACL) length
+                // is changed or object itself is changed.
+                // When we save new ACL, after getting response from BE,
+                // order of items in ACL can differ from original. In this case
+                // verifiers won't be recalculated and we can get invalid list
+                // after merging ACL data which we get from BE.
+                // To prevent this we returns copies of persons which won't be modified
+                // in scenario described above.
+                ({person}) => ({
+                  id: person.id,
+                  type: person.type,
+                }));
+          } else {
+            const inReviewLevel = getInReviewLevel(instance);
+            verifiers = inReviewLevel ? inReviewLevel.attr('users') : [];
           }
-
-          verifiers = acl
-            .filter((item) =>
-              String(item.ac_role_id) === String(verifierRoleId)
-            ).map(
-              // Getter of 'verifiers' is called when access_control_list(ACL) length
-              // is changed or object itself is changed.
-              // When we save new ACL, after getting response from BE,
-              // order of items in ACL can differ from original. In this case
-              // verifiers won't be recalculated and we can get invalid list
-              // after merging ACL data which we get from BE.
-              // To prevent this we returns copies of persons which won't be modified
-              // in scenario described above.
-              ({person}) => ({
-                id: person.id,
-                type: person.type,
-              }));
 
           return verifiers;
         },
