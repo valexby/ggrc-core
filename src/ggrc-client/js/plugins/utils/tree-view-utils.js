@@ -209,7 +209,16 @@ function getAvailableAttributes(modelType) {
     };
   });
 
-  return attrs.concat(customAttrs, roleAttrs);
+  let availableAttributes = attrs.concat(customAttrs, roleAttrs);
+
+  if (Model.hasMultiLevelVerificationFlow) {
+    availableAttributes = availableAttributes.concat(
+      Model.getVerifiersStaticFields(),
+      Model.getReviewLevelsStaticFields()
+    );
+  }
+
+  return availableAttributes;
 }
 
 /**

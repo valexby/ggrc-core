@@ -9,6 +9,7 @@ import '../lazy-render/lazy-render';
 import '../cycle-task-actions/cycle-task-actions';
 import './tree-item-attr';
 import './tree-item-custom-attribute';
+import './tree-item-multi-verification-flow';
 import BaseTreeItemVM from './tree-item-base-vm';
 import template from './templates/tree-item.stache';
 

@@ -29,6 +29,14 @@
                 </div>
               {{/case}}
 
+              {{#case "multiVerificationFlow"}}
+                <tree-item-multi-verification-flow
+                  instance:from="instance"
+                  attrDataLevel:from="attr_data_level"
+                  attrDataType:from="attr_data_type"
+                />
+              {{/case}}
+
               {{#default}}
                 <div class="owner attr-content">
                   <tree-item-attr instance:from="instance" name:from="attr_name"></tree-item-attr>

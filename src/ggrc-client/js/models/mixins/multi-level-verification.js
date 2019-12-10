@@ -4,7 +4,11 @@
 */
 
 import Mixin from './mixin';
-import {isMultiLevelFlow} from '../../plugins/utils/verification-flow-utils';
+import {
+  isMultiLevelFlow,
+} from '../../plugins/utils/verification-flow-utils';
+
+const MAX_LEVELS_COUNT = 10;
 
 export default class MultiLevelVerification extends Mixin {
   cleanUpVerifiers(resource) {
@@ -31,3 +35,37 @@ export default class MultiLevelVerification extends Mixin {
     return resource;
   }
 }
+
+MultiLevelVerification.hasMultiLevelVerificationFlow = true;
+
+MultiLevelVerification.getVerifiersStaticFields = () => {
+  return Array.from({length: MAX_LEVELS_COUNT},
+    (item, index) => {
+      index++;
+      return {
+        attr_title: `Verifiers level ${index}`,
+        attr_name: `verifiers_level_${index}`,
+        attr_data_level: index,
+        attr_type: 'multiVerificationFlow',
+        attr_data_type: 'Person',
+        disable_sorting: true,
+      };
+    }
+  );
+};
+
+MultiLevelVerification.getReviewLevelsStaticFields = () => {
+  return Array.from({length: MAX_LEVELS_COUNT},
+    (item, index) => {
+      index++;
+      return {
+        attr_title: `Review level ${index} state`,
+        attr_name: `review_level_${index}`,
+        attr_data_level: index,
+        attr_type: 'multiVerificationFlow',
+        attr_data_type: 'String',
+        disable_sorting: true,
+      };
+    }
+  );
+};
