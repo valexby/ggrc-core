@@ -236,6 +236,24 @@ function getFragment(viewPath, context) {
   return canStache(view)(context);
 }
 
+const getOrdinalNumber = (number) => {
+  let postfix = 'th';
+
+  switch (number) {
+    case 1:
+      postfix = 'st';
+      break;
+    case 2:
+      postfix = 'nd';
+      break;
+    case 3:
+      postfix = 'rd';
+      break;
+  }
+
+  return `${number}${postfix}`;
+};
+
 export {
   applyTypeFilter,
   isInnerClick,
@@ -251,4 +269,5 @@ export {
   filteredMap,
   getView,
   getFragment,
+  getOrdinalNumber,
 };

@@ -296,5 +296,11 @@ export default canComponent.extend({
     '{viewModel} instance'() {
       this.viewModel.setupGroups();
     },
+    '{viewModel} includeRoles'() {
+      this.viewModel.setupGroups();
+    },
+    '{viewModel} excludeRoles'() {
+      this.viewModel.setupGroups();
+    },
   },
 });

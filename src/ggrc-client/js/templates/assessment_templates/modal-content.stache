@@ -127,6 +127,7 @@
             Verification levels
           </label>
           <dropdown-component
+            onChange:from="@reviewLevelCountChanged"
             optionsList:from="verificationLevels"
             name:bind="instance.review_levels_count">
           </dropdown-component>

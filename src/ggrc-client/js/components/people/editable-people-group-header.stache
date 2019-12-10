@@ -47,3 +47,5 @@
     <small><em>You can add only one person for this role</em></small>
   </div>
 {{/if}}
+
+<can-slot name="additional-header-info" />

@@ -17,6 +17,7 @@ import AutoStatusChangeable from '../mixins/auto-status-changeable';
 import AccessControlList from '../mixins/access-control-list';
 import RefetchHash from '../mixins/refetch-hash';
 import AssessmentIssueTracker from '../mixins/assessment-issue-tracker';
+import MultiLevelVerification from '../mixins/multi-level-verification';
 import RelatedAssessmentsLoader from '../mixins/related-assessments-loader';
 import {REFRESH_MAPPING, REFRESHED} from '../../events/event-types';
 
@@ -33,6 +34,7 @@ export default Cacheable.extend({
     CaUpdate, AutoStatusChangeable,
     AccessControlList, RefetchHash,
     AssessmentIssueTracker, RelatedAssessmentsLoader,
+    MultiLevelVerification,
   ],
   is_custom_attributable: true,
   isRoleable: true,
@@ -366,6 +368,7 @@ export default Cacheable.extend({
           })
             .then((model) => {
               model = this.cleanupAcl(model);
+              model = this.cleanUpVerifiers(model);
               delete this._pending_refresh;
               if (model) {
                 model = this.constructor.model(model, this);

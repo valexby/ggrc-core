@@ -3,8 +3,8 @@
  Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
  */
 
-import loSortBy from 'lodash/sortBy';
 import loHead from 'lodash/head';
+import loFind from 'lodash/find';
 
 const VERIFICATION_FLOWS = {
   STANDARD: 'STANDARD',
@@ -33,13 +33,20 @@ const getFlowDisplayName = (instance) => {
   return instance.attr('verification_workflow');
 };
 
-const getFirstUnreviewedLevel = (instance) => {
-  const unreviewedLevels = instance.attr('review_levels')
-    .filter((reviewLevel) => !reviewLevel.verified_by);
-  const sortedByLevelNumber = loSortBy(unreviewedLevels, 'level_number');
-  const firstUnreviewedLevel = loHead(sortedByLevelNumber);
+const getInReviewLevel = (instance) => {
+  const inReviewLevels = instance.attr('review_levels')
+    .filter((reviewLevel) => reviewLevel.status === 'In Review');
+  return loHead(inReviewLevels);
+};
 
-  return firstUnreviewedLevel;
+const getReviewLevelByNumber = (instance, levelNumber) => {
+  const reviewLevels = instance.attr('review_levels');
+  const reviewLevel = loFind(
+    reviewLevels,
+    (reviewLevel) => reviewLevel.level_number === levelNumber
+  );
+
+  return reviewLevel;
 };
 
 export {
@@ -48,5 +55,6 @@ export {
   isMultiLevelFlow,
   getAssessmentFlows,
   getFlowDisplayName,
-  getFirstUnreviewedLevel,
+  getInReviewLevel,
+  getReviewLevelByNumber,
 };

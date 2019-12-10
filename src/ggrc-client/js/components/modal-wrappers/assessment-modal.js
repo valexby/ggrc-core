@@ -6,6 +6,7 @@
 import '../assessment-template-attributes/assessment-template-attributes';
 import '../assessment-templates/assessment-templates-dropdown/assessment-templates-dropdown';
 import '../spinner-component/spinner-component';
+import '../assessment/assessment-verifiers/assessment-verifiers-modal';
 import canComponent from 'can-component';
 import MappingOperationsVM from '../view-models/mapping-operations-vm';
 import {

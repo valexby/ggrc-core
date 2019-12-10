@@ -1,0 +1,63 @@
+{{!
+  Copyright (C) 2019 Google Inc.
+  Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+}}
+
+<assessment-verifiers instance:from="instance">
+  <div class="people-groups">
+    {{#verifiersGroups}}
+      <assessment-verifiers-group
+        class="people-group"
+        autoUpdate:from="true"
+        on:vm:saveVerifiers="saveVerifiers(scope.event)"
+        updatableGroupId:from="updatableGroupId"
+        readonly:from="isReadonly"
+        instance:from="instance"
+        groupTitle:from="groupTitle"
+        levelNumber:from="levelNumber"
+        people:from="people"
+        verifiersGroup:from="."
+      >
+        <deletable-people-group
+          showEmptyMessage:from="false"
+          on:vm:unmap="removePerson(scope.event.person)"
+          canUnmap:from="canEdit"
+          isLoading:from="isLoading"
+          groupId:from="levelNumber"
+          instance:from="instance"
+          people:from="people"
+        >
+          <label class="people-group__title-content form-label form-label__extended">
+            <span class="people-group__title people-group__title--deletable">{{groupTitle}}</span>
+          </label>
+        </deletable-people-group>
+        <div>
+          {{#if isUpdating}}
+            <spinner-component toggle:from="isUpdating"></spinner-component>
+          {{else}}
+            {{#if canEdit}}
+              {{^if_config_exist 'external_services.Person'}}
+                <autocomplete-component
+                    searchItemsType:from="'Person'"
+                    on:itemSelected="personSelected(scope.event.selectedItem)"
+                    placeholder:from="placeholder">
+                </autocomplete-component>
+              {{else}}
+                <external-data-autocomplete
+                  type:from="'Person'"
+                  placeholder:from="placeholder"
+                  minLength:from="2"
+                  on:itemSelected="personSelected(scope.event.selectedItem)">
+                </external-data-autocomplete>
+              {{/if_config_exist}}
+            {{else}}
+              {{^if people.length}}
+                <span class="empty-message">None</span>
+              {{/if}}
+            {{/if}}
+          {{/if}}
+        </div>
+      </assessment-verifiers-group>
+    {{/verifiersGroups}}
+  </div>
+</assessment-verifiers>

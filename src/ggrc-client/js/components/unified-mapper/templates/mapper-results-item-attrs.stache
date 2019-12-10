@@ -20,6 +20,14 @@
           </div>
         {{/case}}
 
+        {{#case "multiVerificationFlow"}}
+          <tree-item-multi-verification-flow
+            instance:from="instance"
+            attrDataLevel:from="attr_data_level"
+            attrDataType:from="attr_data_type"
+          />
+        {{/case}}
+
         {{#case 'map_as'}}
           <mega-relation-selection-item
             class="tree-radio-select-area"
