@@ -227,12 +227,55 @@ export default canComponent.extend({
       diff.changes = diff.changes.concat(
         this._accessControlListDiff(rev1, rev2)
       );
+      if (rev1.content.verification_workflow === 'MLV') {
+        diff.changes = diff.changes.concat(
+          this._reviewLevelsDiff(rev1, rev2)
+        );
+      }
       diff.changes = diff.changes.concat(
         this._objectCADiff(
           rev1.content.custom_attribute_values,
           rev1.content.custom_attribute_definitions,
           rev2.content.custom_attribute_values,
           rev2.content.custom_attribute_definitions));
+      return diff;
+    },
+    /**
+     * A helper function for computing the difference between the two review_levels fields
+     * @param {Revision} rev1 - the older of the two revisions
+     * @param {Revision} rev2 - the newer of the two revisions
+     *
+     * @return {Array} - A list of objects describing the modified attributes of the
+     * instance's review_levels, with each object having the following attributes:
+     *  - fieldName: the name of the changed verifiers level or review level state
+     *  - origVal: the attribute's original value
+     *  - newVal: the attribute's new (modified) value
+     *  - isRole: the flag describing that diff related to verifiers
+     */
+    _reviewLevelsDiff(rev1, rev2) {
+      const rev1content = rev1.content;
+      const rev2content = rev2.content;
+      const diff = [];
+      const reviewLevels2 = rev2content.review_levels;
+
+      rev1content.review_levels.forEach((reviewLevel1, index) => {
+        const verifiersDiff = this._reviewLevelVerifiersDiff(
+          reviewLevel1,
+          reviewLevels2[index]
+        );
+        const statusDiff = this._reviewLevelStatusDiff(
+          reviewLevel1,
+          reviewLevels2[index]
+        );
+
+        if (verifiersDiff) {
+          diff.push(verifiersDiff);
+        }
+        if (statusDiff) {
+          diff.push(statusDiff);
+        }
+      });
+
       return diff;
     },
     /**
@@ -263,24 +306,10 @@ export default canComponent.extend({
       roles.forEach((role) => {
         let rev1people = this._getPeopleForRole(role, rev1content);
         let rev2people = this._getPeopleForRole(role, rev2content);
-        let roleDiff;
 
-        // if arrays are not equal by person id
-        let idsDiff = loXor(
-          loMap(rev1people, (person) => person.id),
-          loMap(rev2people, (person) => person.id)
-        );
-        if (idsDiff.length) {
-          roleDiff = new canMap({
-            fieldName: role.name,
-            origVal: [],
-            newVal: [],
-            isRole: true,
-          });
-
-          roleDiff.attr('origVal', this._buildPeopleEmails(rev1people));
-          roleDiff.attr('newVal', this._buildPeopleEmails(rev2people));
-
+        const roleDiff = this._peopleDiff(rev1people, rev2people);
+        if (roleDiff) {
+          roleDiff.attr('fieldName', role.name);
           diff.push(roleDiff);
         }
       });
@@ -500,6 +529,91 @@ export default canComponent.extend({
       );
 
       return peopleList.length ? peopleList : [EMPTY_DIFF_VALUE];
+    },
+    /**
+     * A helper function for computing the difference between the two statuses
+     * of a review_level object.
+     * @param {Object} reviewLevel1 - the older of the two reviewLevels
+     * @param {Object} reviewLevel2 - the newer of the two reviewLevels
+     *
+     * @return {Object} - An object describing the modified "status" attribute of the
+     * review_level object, with each object having the following attributes:
+     *  - fieldName: the name of the changed review level state
+     *  - origVal: the attribute's original value
+     *  - newVal: the attribute's new (modified) value
+     */
+    _reviewLevelStatusDiff(reviewLevel1, reviewLevel2) {
+      let statusDiff = null;
+
+      if (reviewLevel1.status !== reviewLevel2.status) {
+        statusDiff = new canMap({
+          fieldName: `Review level ${reviewLevel1.level_number} state`,
+          origVal: reviewLevel1.status,
+          newVal: reviewLevel2.status,
+        });
+      }
+
+      return statusDiff;
+    },
+    /**
+     * A helper function for computing the difference between the two users lists
+     * of a review_level object.
+     * @param {Object} reviewLevel1 - the older of the two reviewLevels
+     * @param {Object} reviewLevel2 - the newer of the two reviewLevels
+     *
+     * @return {Object} - An object describing the modified "users" attributes of the
+     * review_level object, with each object having the following attributes:
+     *  - fieldName: the name of the changed review level verifiers
+     *  - origVal: the attribute's original value
+     *  - newVal: the attribute's new (modified) value
+     *  - isRole: the flag describing that diff related to verifiers
+     */
+    _reviewLevelVerifiersDiff(reviewLevel1, reviewLevel2) {
+      const verifiersDiff = this._peopleDiff(
+        reviewLevel1.users,
+        reviewLevel2.users
+      );
+
+      if (verifiersDiff) {
+        verifiersDiff.attr(
+          'fieldName',
+          `Verifiers level ${reviewLevel1.level_number}`
+        );
+      }
+
+      return verifiersDiff;
+    },
+    /**
+     * A helper function for computing the difference between the two people lists
+     * @param {Array} people1 - the older of the two people lists
+     * @param {Array} people2 - the newer of the two people lists
+     *
+     * @return {Object} - An object describing the modified people list,
+     * with each object having the following attributes:
+     *  - origVal: the attribute's original value
+     *  - newVal: the attribute's new (modified) value
+     *  - isRole: the flag describing that diff related to verifiers
+     */
+    _peopleDiff(people1, people2) {
+      let peopleDiff = null;
+
+      const idsDiff = loXor(
+        loMap(people1, (person) => person.id),
+        loMap(people2, (person) => person.id)
+      );
+
+      if (idsDiff.length) {
+        peopleDiff = new canMap({
+          origVal: [],
+          newVal: [],
+          isRole: true,
+        });
+
+        peopleDiff.attr('origVal', this._buildPeopleEmails(people1));
+        peopleDiff.attr('newVal', this._buildPeopleEmails(people2));
+      }
+
+      return peopleDiff;
     },
   }),
 });
