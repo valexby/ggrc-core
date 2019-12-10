@@ -6,8 +6,10 @@
 import canMap from 'can-map';
 import canComponent from 'can-component';
 import canStache from 'can-stache';
-import loFind from 'lodash/find';
 import template from './templates/assessment-verifiers-info-pane.stache';
+import {
+  getReviewLevelByNumber,
+} from '../../../plugins/utils/verification-flow-utils';
 import './assessment-verifiers';
 import './assessment-verifiers-group';
 
@@ -21,11 +23,10 @@ export default canComponent.extend({
     isReadonly: false,
     updatableGroupId: null,
     saveVerifiers({levelNumber, people}) {
-      const reviewLevels = this.attr('instance.review_levels');
-      const updatedReviewLevel = loFind(reviewLevels, (reviewLevel) => {
-        return reviewLevel.level_number === levelNumber;
-      });
-
+      const updatedReviewLevel = getReviewLevelByNumber(
+        this.attr('instance'),
+        levelNumber
+      );
       updatedReviewLevel.attr('users', people);
 
       this.attr('deferredSave').push(() => {

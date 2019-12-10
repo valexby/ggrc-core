@@ -4,6 +4,7 @@
  */
 
 import loHead from 'lodash/head';
+import loFind from 'lodash/find';
 
 const VERIFICATION_FLOWS = {
   STANDARD: 'STANDARD',
@@ -38,6 +39,16 @@ const getInReviewLevel = (instance) => {
   return loHead(inReviewLevels);
 };
 
+const getReviewLevelByNumber = (instance, levelNumber) => {
+  const reviewLevels = instance.attr('review_levels');
+  const reviewLevel = loFind(
+    reviewLevels,
+    (reviewLevel) => reviewLevel.level_number === levelNumber
+  );
+
+  return reviewLevel;
+};
+
 export {
   isStandardFlow,
   isSox302Flow,
@@ -45,4 +56,5 @@ export {
   getAssessmentFlows,
   getFlowDisplayName,
   getInReviewLevel,
+  getReviewLevelByNumber,
 };
