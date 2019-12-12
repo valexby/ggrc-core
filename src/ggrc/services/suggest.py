@@ -4,6 +4,7 @@
 """Suggest persons by prefix"""
 
 import json
+import logging
 
 from flask import current_app
 from flask import request
@@ -13,6 +14,9 @@ from sqlalchemy.orm import load_only
 from ggrc.integrations import client
 from ggrc import settings
 from ggrc.models import all_models
+
+
+logger = logging.getLogger(__name__)
 
 
 def mock_suggest():
@@ -52,6 +56,7 @@ def suggest():
 def make_suggest_result(entries):
   """Build suggest response"""
   domain = getattr(settings, "AUTHORIZED_DOMAIN", "")
+  logger.info("ENTRIES TEST DATA HERE: %s", str(entries))
   return current_app.make_response((
       json.dumps([{
           "name": "%s %s" % (entry["firstName"], entry["lastName"]),
