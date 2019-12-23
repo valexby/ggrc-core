@@ -33,6 +33,7 @@ from ggrc.utils import referenced_objects
 logger = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-public-methods
 class AssessmentTrackerHandler(object):
   """Module that used for integration Assessment with IssueTracker.
 
@@ -231,6 +232,28 @@ class AssessmentTrackerHandler(object):
         comment,
         author
     )
+
+    return issue_payload
+
+  @classmethod
+  def prepare_disable_comment_json(cls):
+    """Prepare parameters for disable comment update in bulk mode
+
+    Returns:
+        Dict with IssueTracker issue info.
+    """
+    issue_payload = cls._collect_payload_disable()
+
+    return issue_payload
+
+  @classmethod
+  def prepare_enable_comment_json(cls):
+    """Prepare parameters for disable comment update in bulk mode
+
+    Returns:
+        Dict with IssueTracker issue info.
+    """
+    issue_payload = cls._collect_payload_enable()
 
     return issue_payload
 
@@ -1791,6 +1814,20 @@ class AssessmentTrackerHandler(object):
     """
     issue_payload = {
         "comment": constants.DISABLED_TMPL
+    }
+
+    return issue_payload
+
+  @staticmethod
+  def _collect_payload_enable():
+    """Collect enable assessment payload.
+
+    Returns:
+        issue_payload: dictionary with information
+        for assessment enable
+    """
+    issue_payload = {
+        "comment": constants.ENABLED_TMPL
     }
 
     return issue_payload
