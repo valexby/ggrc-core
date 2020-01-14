@@ -590,6 +590,26 @@ class TestRevisions(query_helper.WithQueryApi, TestCase):
     self.assertFalse(revisions[0].is_empty)
     self.assertTrue(revisions[1].is_empty)
 
+  def test_deleted_mirrored_revisions_count(self):
+    """Test in case we delete 2 revisions by 1 query we have 2 revisions"""
+    with factories.single_commit():
+      product = factories.ProductFactory()
+      metric = factories.MetricFactory()
+      relationship1 = factories.RelationshipFactory(
+          source=product, destination=metric
+      )
+      factories.RelationshipFactory(
+          source=metric, destination=product
+      )
+
+    response = self.api_helper.delete(relationship1)
+    self.assert200(response)
+
+    delete_revisions_count = all_models.Revision.query.filter(
+        all_models.Revision.action == 'deleted'
+    ).count()
+    self.assertEqual(delete_revisions_count, 2)
+
   def test_changes_revision(self):
     """Test revision is marked empty or not depending on changes"""
     with factories.single_commit():

@@ -799,7 +799,10 @@ class Resource(ModelView):
       # user obtain value for flag "readonly"
       self._validate_readonly_access(obj, None)
 
-    db.session.delete(obj)
+    if self.model.__name__ == 'Relationship':
+      self.handle_relationship_deletion(obj)
+    else:
+      db.session.delete(obj)
     with benchmark("Send DELETEd event"):
       signals.Restful.model_deleted.send(
           obj.__class__, obj=obj, service=self)
@@ -824,6 +827,24 @@ class Resource(ModelView):
     with benchmark("Make response"):
       result = self.json_success_response({}, datetime.datetime.utcnow())
     return result
+
+  @staticmethod
+  def handle_relationship_deletion(obj):
+    """Handle deletion also mirrored relationships if some"""
+    db.session.delete(obj)
+    relationship = ggrc.models.all_models.Relationship
+    rels_to_delete = relationship.query.filter(sa.and_(
+        relationship.source_id == obj.destination_id,
+        relationship.source_type == obj.destination_type,
+        relationship.destination_type == obj.source_type,
+        relationship.destination_id == obj.source_id,
+    )).all()
+
+    for relationship in rels_to_delete:
+      db.session.delete(relationship)
+      logger.info(
+          "Deleted mirrored relationship with id=%d", relationship.id
+      )
 
   @staticmethod
   def has_cache():
