@@ -64,7 +64,7 @@ def create_gdrive_file(csv_string, filename):
                                      resumable=True)
     result = drive_service.files().create(body=file_metadata,
                                           media_body=media,
-                                          fields='id, name, parents').execute()
+                                          fields='id, name, parents').execute(num_retries=3)
     return result
   except HttpAccessTokenRefreshError:
     handle_token_error()
@@ -85,13 +85,13 @@ def get_gdrive_file_data(file_data):
     drive_service = discovery.build(API_SERVICE_NAME, API_VERSION,
                                     http=http_auth)
     # check file type
-    file_meta = drive_service.files().get(fileId=file_data['id']).execute()
+    file_meta = drive_service.files().get(fileId=file_data['id']).execute(num_retries=3)
     if file_meta.get('mimeType') == 'text/csv':
       file_data = drive_service.files().get_media(
-          fileId=file_data['id']).execute()
+          fileId=file_data['id']).execute(num_retries=3)
     else:
       file_data = drive_service.files().export_media(
-          fileId=file_data['id'], mimeType='text/csv').execute()
+          fileId=file_data['id'], mimeType='text/csv').execute(num_retries=3)
     csv_data = read_csv_file(StringIO(file_data))
   except AttributeError:
     # when file_data has no splitlines() method
@@ -112,7 +112,7 @@ def copy_file_request(drive_service, file_id, body):
       fileId=file_id,
       body=body,
       fields='id,webViewLink,name'
-  ).execute()
+  ).execute(num_retries=3)
   return response
 
 
@@ -122,7 +122,7 @@ def rename_file_request(drive_service, file_id, body):
       fileId=file_id,
       body=body,
       fields='id,webViewLink,name'
-  ).execute()
+  ).execute(num_retries=3)
 
 
 def add_folder_request(drive_service, file_id, folder_id):
@@ -131,7 +131,7 @@ def add_folder_request(drive_service, file_id, folder_id):
       fileId=file_id,
       addParents=folder_id,
       fields='webViewLink'
-  ).execute()
+  ).execute(num_retries=3)
 
 
 def validate_response(response):
@@ -188,14 +188,14 @@ def process_gdrive_file(file_id, folder_id, is_uploaded=False):
     file_meta = drive_service.files().get(
         fileId=file_id,
         fields='id,webViewLink,name'
-    ).execute()
+    ).execute(num_retries=3)
     if is_uploaded:
       response = file_meta
     else:
       response = drive_service.files().list(
           q="name contains '{}'".format(file_meta['name']),
           spaces='drive',
-          fields='files(parents, name)').execute()
+          fields='files(parents, name)').execute(num_retries=3)
       file_name = _generate_new_file_name(response.get('files', []),
                                           file_meta['name'],
                                           folder_id)
@@ -219,7 +219,7 @@ def get_gdrive_file_link(file_id):
     drive_service = discovery.build(
         API_SERVICE_NAME, API_VERSION, http=http_auth)
     file_meta = drive_service.files().get(fileId=file_id,
-                                          fields='webViewLink').execute()
+                                          fields='webViewLink').execute(num_retries=3)
   except HttpAccessTokenRefreshError:
     handle_token_error()
   except HttpError as ex:
