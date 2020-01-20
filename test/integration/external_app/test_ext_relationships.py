@@ -54,17 +54,24 @@ class TestExternalRelationshipNew(TestCase):
     rel = all_models.Relationship.query.get(relationship_id)
     self.assertIsNone(rel)
 
-  def test_sync_service_delete_related_relationships(self):
+  @ddt.data(
+      (True, False),
+      (True, True),
+      (False, True),
+      (False, False)
+  )
+  @ddt.unpack
+  def test_sync_service_delete_related_relationships(self, ext1, ext2):
     """Test sync service delete both relationship on request"""
     with factories.single_commit():
       issue = factories.IssueFactory()
       objective = factories.ObjectiveFactory()
       relationship1 = factories.RelationshipFactory(
-          source=issue, destination=objective, is_external=False
+          source=issue, destination=objective, is_external=ext1
       )
       relationship1_id = relationship1.id
       relationship2 = factories.RelationshipFactory(
-          source=objective, destination=issue, is_external=False
+          source=objective, destination=issue, is_external=ext2
       )
       relationship2_id = relationship2.id
 
@@ -111,7 +118,7 @@ class TestExternalRelationshipNew(TestCase):
     self.assertEqual(relationships_count, 1)
 
   @ddt.data(
-      # (True, False), This case is unlikely
+      (True, False),
       (True, True),
   )
   @ddt.unpack
