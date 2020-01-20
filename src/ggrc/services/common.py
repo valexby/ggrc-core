@@ -819,7 +819,9 @@ class Resource(ModelView):
 
   @staticmethod
   def handle_relationship_deletion(obj):
-    """Handle deletion also mirrored relationships if some"""
+    """Handle deletion also mirrored relationships
+    is_duplicate is flag that shows that relationship is mirrored
+    """
     db.session.delete(obj)
     relationship = ggrc.models.all_models.Relationship
     rels_to_delete = relationship.query.filter(sa.and_(
@@ -830,6 +832,7 @@ class Resource(ModelView):
     )).all()
 
     for relationship in rels_to_delete:
+      setattr(relationship, 'is_duplicate', True)
       db.session.delete(relationship)
       logger.info(
           "Deleted mirrored relationship with id=%d", relationship.id
