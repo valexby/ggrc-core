@@ -1030,28 +1030,36 @@ class Resource(ModelView):
     return src
 
   def _get_relationship(self, src):
-    """Get existing relationship if exists, and update updated_at"""
+    """Get proper relationship from mirrored relationships if it exist
+     and update updated_at on all relationships."""
+    source_type, source_id = src["source"]["type"], src["source"]["id"]
+    dest_type, dest_id = src["destination"]["type"], src["destination"]["id"]
 
-    relationship = self.model.get_related_query_by_type_id(
-        type1=src["source"]["type"],
-        id1=src["source"]["id"],
-        type2=src["destination"]["type"],
-        id2=src["destination"]["id"],
+    relationships = self.model.get_related_query_by_type_id(
+        type1=source_type,
+        id1=source_id,
+        type2=dest_type,
+        id2=dest_id,
         strict_id=True
-    ).first()
+    ).all()
+    relationship = relationships[0] if relationships else None
 
-    if relationship:
+    if relationships:
       # Manually trigger relationship update in order for revisions and
       # event being created. We expect positive response when POSTing
       # an existing relationship.
       logger.info(
           "The relationship between %s %s and %s %s is already exist.",
-          src["source"]["type"],
-          src["source"]["id"],
-          src["destination"]["type"],
-          src["destination"]["id"],
+          source_type, source_id, dest_type, dest_id,
       )
-      relationship.updated_at = datetime.datetime.utcnow()
+
+      for rel in relationships:
+        if (rel.source_type == source_type and
+           rel.source_id == source_id and
+           rel.destination_type == dest_type and
+           rel.destination_id == dest_id):
+          relationship = rel
+        rel.updated_at = datetime.datetime.utcnow()
     return relationship
 
   def _get_model_instance(self, src=None):

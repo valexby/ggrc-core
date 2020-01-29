@@ -3,9 +3,11 @@
 
 """Module for integration tests for Relationship."""
 
+import datetime
 import json
 
 import ddt
+from freezegun import freeze_time
 
 from ggrc import db
 from ggrc.models import all_models
@@ -173,6 +175,76 @@ class TestRelationship(TestCase):
 
     self.assert201(resp)
     self.assertEqual(r1_id, r2.id)
+
+  @ddt.data(
+      (0, 1, 0),
+      (1, 0, 1),
+  )
+  @ddt.unpack
+  def test_get_proper_mirrored_relationship(self,
+                                            source_index,
+                                            destination_index,
+                                            expected_relationship_index):
+    """Test that we update a relationship when we have mirrored ones.
+    We need update and return a proper relationship that in POST request.
+
+    At first we trying to POST the oldest relationship then the newest one."""
+    with factories.single_commit():
+      source = factories.ControlFactory()
+      destination = factories.ObjectiveFactory()
+      relationship1_id = factories.RelationshipFactory(
+          source=source,
+          destination=destination).id
+      relationship2_id = factories.RelationshipFactory(
+          source=destination,
+          destination=source).id
+
+    source_destination = [source, destination]
+    relationships_ids = [relationship1_id, relationship2_id]
+    relationship_payload = self.build_relationship_json(
+        source=source_destination[source_index],
+        destination=source_destination[destination_index])
+
+    response = self.client.post(
+        self.REL_URL,
+        data=relationship_payload,
+        headers=self.HEADERS)
+    self.assert200(response)
+
+    relationship_json = response.json[0][1]["relationship"]
+    self.assertEquals(relationship_json["id"],
+                      relationships_ids[expected_relationship_index])
+
+  def test_updated_at_on_mirrored_relationship(self):
+    """Test update update_at field on mirrored relationships."""
+    with factories.single_commit():
+      source = factories.ControlFactory()
+      destination = factories.ObjectiveFactory()
+      relationship1_id = factories.RelationshipFactory(
+          source=destination,
+          destination=source).id
+      relationship2_id = factories.RelationshipFactory(
+          source=source,
+          destination=destination).id
+
+    relationship_payload = self.build_relationship_json(
+        source=source,
+        destination=destination)
+
+    freeze_updated_at = datetime.datetime(2020, 01, 28, 18, 7, 0)
+    with freeze_time(freeze_updated_at):
+      response = self.client.post(
+          self.REL_URL,
+          data=relationship_payload,
+          headers=self.HEADERS)
+    self.assert200(response)
+
+    relationships = all_models.Relationship.query.filter(
+        all_models.Relationship.id.in_([relationship1_id, relationship2_id])
+    ).all()
+    relationships_updated_at = [r.updated_at for r in relationships]
+    self.assertEquals([freeze_updated_at, freeze_updated_at],
+                      relationships_updated_at)
 
 
 @ddt.ddt
