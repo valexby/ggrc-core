@@ -4,7 +4,6 @@
 */
 
 import Cacheable from '../cacheable';
-import AccessControlList from '../mixins/access-control-list';
 import Proposable from '../mixins/proposable';
 import ChangeableExternally from '../mixins/changeable-externally';
 
@@ -26,7 +25,6 @@ export default Cacheable.extend({
   is_custom_attributable: true,
   isRoleable: true,
   mixins: [
-    AccessControlList,
     ChangeableExternally,
     Proposable,
   ],

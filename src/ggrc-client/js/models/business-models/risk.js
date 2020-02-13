@@ -7,7 +7,6 @@ import Cacheable from '../cacheable';
 import Proposable from '../mixins/proposable';
 import Reviewable from '../mixins/reviewable';
 import ChangeableExternally from '../mixins/changeable-externally';
-import Stub from '../stub';
 
 export default Cacheable.extend({
   root_object: 'risk',
@@ -26,10 +25,6 @@ export default Cacheable.extend({
   migrationDate: '06/13/2019',
   is_custom_attributable: true,
   isRoleable: true,
-  attributes: {
-    context: Stub,
-    modified_by: Stub,
-  },
   tree_view_options: {
     attr_list: Cacheable.attr_list.concat([
       {attr_title: 'Reference URL', attr_name: 'reference_url', order: 85},

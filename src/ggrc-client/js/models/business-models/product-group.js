@@ -5,7 +5,6 @@
 
 import Cacheable from '../cacheable';
 import Questionnaire from '../mixins/questionnaire';
-import Stub from '../stub';
 import ChangeableExternally from '../mixins/changeable-externally';
 import DisableAddComments from '../mixins/disable-add-comments';
 
@@ -24,10 +23,6 @@ export default Cacheable.extend({
     DisableAddComments,
   ],
   migrationDate: '02/24/2020',
-  attributes: {
-    context: Stub,
-    modified_by: Stub,
-  },
   tree_view_options: {
     attr_list: Cacheable.attr_list.concat([
       {attr_title: 'Effective Date', attr_name: 'start_date'},
@@ -53,11 +48,6 @@ export default Cacheable.extend({
   },
   is_custom_attributable: true,
   isRoleable: true,
-  defaults: {
-    title: '',
-    url: '',
-    status: 'Draft',
-  },
   sub_tree_view_options: {
     default_filter: ['Product'],
   },
