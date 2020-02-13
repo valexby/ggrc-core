@@ -48,6 +48,7 @@ describe('Mappings', () => {
         'Threat',
       ],
       notMappable: ['Assessment', 'AssessmentTemplate', 'Evidence', 'Person'],
+      directives: ['Regulation', 'Standard'],
     },
     workflows: {
       models: [
@@ -107,10 +108,10 @@ describe('Mappings', () => {
       ['Audit', 'Assessment', 'Person']
         .concat(modules.core.notMappable, modules.workflows.notMappable)),
     Project: filtered,
-    Regulation: loDifference(filtered, ['Regulation']),
+    Regulation: loDifference(filtered, modules.core.directives),
     Risk: filtered,
     Requirement: filtered,
-    Standard: loDifference(filtered, ['Standard']),
+    Standard: loDifference(filtered, modules.core.directives),
     System: filtered,
     TaskGroup: loDifference(filtered, ['Audit', 'Person',
       'Workflow', 'Assessment', 'Document']),
