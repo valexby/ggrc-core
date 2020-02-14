@@ -20,9 +20,6 @@ export default Cacheable.extend({
   category: 'scope',
   findAll: 'GET /api/processes',
   findOne: 'GET /api/processes/{id}',
-  create: 'POST /api/processes',
-  update: 'PUT /api/processes/{id}',
-  destroy: 'DELETE /api/processes/{id}',
   mixins: [
     Questionnaire,
     ChangeableExternally,

@@ -14,9 +14,6 @@ export default Cacheable.extend({
   category: 'scope',
   findAll: 'GET /api/key_reports',
   findOne: 'GET /api/key_reports/{id}',
-  create: 'POST /api/key_reports',
-  update: 'PUT /api/key_reports/{id}',
-  destroy: 'DELETE /api/key_reports/{id}',
   mixins: [
     Questionnaire,
     ChangeableExternally,

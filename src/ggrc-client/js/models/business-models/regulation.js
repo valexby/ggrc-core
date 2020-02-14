@@ -19,9 +19,6 @@ export default Cacheable.extend({
   table_singular: 'regulation',
   findAll: 'GET /api/regulations',
   findOne: 'GET /api/regulations/{id}',
-  create: 'POST /api/regulations',
-  update: 'PUT /api/regulations/{id}',
-  destroy: 'DELETE /api/regulations/{id}',
   is_custom_attributable: true,
   isRoleable: true,
   mixins: [

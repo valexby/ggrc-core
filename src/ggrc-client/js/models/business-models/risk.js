@@ -14,9 +14,6 @@ export default Cacheable.extend({
   category: 'risk',
   findAll: 'GET /api/risks',
   findOne: 'GET /api/risks/{id}',
-  create: 'POST /api/risks',
-  update: 'PUT /api/risks/{id}',
-  destroy: 'DELETE /api/risks/{id}',
   mixins: [
     Proposable,
     Reviewable,

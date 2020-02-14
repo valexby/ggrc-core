@@ -15,9 +15,6 @@ export default Cacheable.extend({
   category: 'governance',
   findAll: 'GET /api/controls',
   findOne: 'GET /api/controls/{id}',
-  create: 'POST /api/controls',
-  update: 'PUT /api/controls/{id}',
-  destroy: 'DELETE /api/controls/{id}',
   mixins: [
     Proposable,
     Reviewable,
