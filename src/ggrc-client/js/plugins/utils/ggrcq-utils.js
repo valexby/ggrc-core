@@ -53,14 +53,14 @@ function isMappableExternally(source, destination) {
 /**
  * Get url to questionnaire
  * @param {Object} options - The url options
- * @param {String} options.model - The model name
  * @param {String} options.path - The questionnaire path
+ * @param {String} options.model - The model name
  * @param {String} options.slug - The model slug
  * @param {String} options.view - The view path
  * @param {String} options.params - Additional url params
  * @return {String} Url to questions
  */
-function getUrl({model, path, slug, view, params}) {
+function getUrl({path, model, slug, view, params}) {
   let url = GGRC.GGRC_Q_INTEGRATION_URL;
   if (!url) {
     return '';
@@ -69,15 +69,15 @@ function getUrl({model, path, slug, view, params}) {
     url += '/';
   }
 
-  let modelParams = '';
+  path = path ? path.toLowerCase() : '';
 
+  let modelParams = '';
   if (model && slug) {
     model = model.toLowerCase();
     slug = slug.toLowerCase();
     modelParams = `/${model}=${slug}`;
   }
 
-  path = path ? path.toLowerCase() : '';
   view = view ? `/${view}` : '';
   params = params ? `?${params}` : '';
 
@@ -91,8 +91,8 @@ function getUrl({model, path, slug, view, params}) {
  */
 function getQuestionsUrl(instance) {
   return getUrl({
-    model: instance.constructor.table_singular,
     path: 'questionnaires',
+    model: instance.constructor.table_singular,
     slug: instance.slug,
   });
 }
@@ -103,9 +103,10 @@ function getQuestionsUrl(instance) {
  * @return {String} Url to info view
  */
 function getInfoUrl(instance) {
+  const {path, model} = getUrlModelAndPath(instance);
   return getUrl({
-    model: instance.constructor.table_singular,
-    path: instance.constructor.table_plural,
+    path,
+    model,
     slug: instance.slug,
     view: 'info',
   });
@@ -117,9 +118,10 @@ function getInfoUrl(instance) {
  * @return {String} Url to comment form
  */
 function getCommentFormUrl(instance) {
+  const {path, model} = getUrlModelAndPath(instance);
   return getUrl({
-    model: instance.constructor.table_singular,
-    path: instance.constructor.table_plural,
+    path,
+    model,
     slug: instance.slug,
     view: 'info',
     params: 'comments=open',
@@ -133,8 +135,8 @@ function getCommentFormUrl(instance) {
  */
 function getReviewUrl(instance) {
   return getUrl({
-    model: instance.constructor.table_singular,
     path: instance.constructor.table_plural,
+    model: instance.constructor.table_singular,
     slug: instance.slug,
     view: 'review',
   });
@@ -156,9 +158,10 @@ function getImportUrl() {
  * @return {String} Url to proposals view
  */
 function getProposalsUrl(instance) {
+  const {path, model} = getUrlModelAndPath(instance);
   return getUrl({
-    model: instance.constructor.table_singular,
-    path: instance.constructor.table_plural,
+    path,
+    model,
     slug: instance.slug,
     view: 'proposals',
   });
@@ -170,9 +173,10 @@ function getProposalsUrl(instance) {
  * @return {String} Url to change log view
  */
 function getChangeLogUrl(instance) {
+  const {path, model} = getUrlModelAndPath(instance);
   return getUrl({
-    model: instance.constructor.table_singular,
-    path: instance.constructor.table_plural,
+    path,
+    model,
     slug: instance.slug,
     view: 'change-log',
   });
@@ -198,28 +202,25 @@ function getMapUrl(instance, destinationModel, statuses) {
   const extBusinessSource = externalBusinessObjects.includes(source);
   const extBusinessDest = externalBusinessObjects.includes(destination);
 
-
-  let view = scopingDest ? 'scope'
-    : destinationModel.table_plural;
   let path = instance.constructor.table_plural;
+  let model = instance.constructor.table_singular;
 
   if (scopingSource) {
     path = 'questionnaires';
-
-    if (extDirectiveDest) {
-      view = 'map-objects';
-    }
-  } else if (extBusinessSource) {
-    if (extDirectiveDest) {
-      view = 'directives';
-    }
   } else if (extDirectiveSource) {
     path = 'directives';
+    model = 'directive';
+  } else if (!extBusinessSource) {
+    return '';
+  }
 
-    if (scopingDest) {
-      view = 'applicable-scope';
-    }
-  } else {
+  let view = destinationModel.table_plural;
+
+  if (extDirectiveDest) {
+    view = 'directives';
+  } else if (scopingDest) {
+    view = 'scope';
+  } else if (!extBusinessDest) {
     return '';
   }
 
@@ -228,14 +229,12 @@ function getMapUrl(instance, destinationModel, statuses) {
     addType = false;
   }
 
-  const typeParamName = scopingDest ? 'types'
-    : (extDirectiveDest ? 'type' : '');
   const params = `mappingStatus=${statuses}`
-    + (addType ? `&${typeParamName}=${destinationModel.table_singular}` : '');
+    + (addType ? `&types=${destinationModel.table_singular}` : '');
 
   return getUrl({
     path,
-    model: instance.constructor.table_singular,
+    model,
     slug: instance.slug,
     view,
     params,
@@ -272,22 +271,24 @@ function getUnmappingUrl(instance, destinationModel) {
  * @return {String} Url to create new object
  */
 function getCreateObjectUrl(model) {
-  let options;
-
   const isScope = scopingObjects.includes(model.model_singular);
+  const isDirective = externalDirectiveObjects.includes(model.model_singular);
+  let path = model.table_plural;
+  let objectBeingCreated = model.root_object;
+
   if (isScope) {
-    options = {
-      path: 'scope',
-      params: `create=${model.root_object}`,
-    };
-  } else {
-    options = {
-      path: model.table_plural,
-      params: 'action=create',
-    };
+    path = 'scope';
   }
 
-  return getUrl(options);
+  if (isDirective) {
+    path = 'directives';
+    objectBeingCreated = 'directive';
+  }
+
+  return getUrl({
+    path,
+    params: `create=${objectBeingCreated}`,
+  });
 }
 
 /**
@@ -303,10 +304,10 @@ function getProposalAttrUrl(
   attributeName,
   isCustomAttribute,
 ) {
-  const {model, path} = getUrlModelAndPath(instance);
+  const {path, model} = getUrlModelAndPath(instance);
   return getUrl({
-    model,
     path,
+    model,
     slug: instance.slug,
     view: 'info',
     params: `${isCustomAttribute
@@ -319,14 +320,14 @@ function getProposalAttrUrl(
 /**
 * Get url model and path according to instance's model_singular
 * @param {Object} instance - The model instance
-* @return {Object} Object containing model and path
+* @return {Object} Object containing path and model
 */
 const getUrlModelAndPath = (instance) => {
   const isDirective = externalDirectiveObjects
     .includes(instance.constructor.model_singular);
-  const model = isDirective ? 'directive' : instance.constructor.table_singular;
   const path = isDirective ? 'directives' : instance.constructor.table_plural;
-  return {model, path};
+  const model = isDirective ? 'directive' : instance.constructor.table_singular;
+  return {path, model};
 };
 
 export {
