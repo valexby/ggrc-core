@@ -7,6 +7,7 @@ import loDifference from 'lodash/difference';
 import canMap from 'can-map';
 import * as businessModels from '../models/business-models';
 import {getRelatedWidgetNames} from '../plugins/utils/mega-object-utils';
+import {externalDirectiveObjects} from '../plugins/models-types-collections';
 
 /**
  * Tree View Widgets Configuration module
@@ -122,9 +123,9 @@ baseWidgetsByType = {
   ProductGroup: filteredTypes,
   Program: loDifference(filteredTypes, ['Program', 'Assessment']),
   Project: filteredTypes,
-  Regulation: loDifference(filteredTypes, ['Regulation']),
+  Regulation: loDifference(filteredTypes, externalDirectiveObjects),
   Requirement: filteredTypes,
-  Standard: loDifference(filteredTypes, ['Standard']),
+  Standard: loDifference(filteredTypes, externalDirectiveObjects),
   System: filteredTypes,
   Risk: filteredTypes,
   TechnologyEnvironment: filteredTypes,
