@@ -44,6 +44,10 @@ describe('Mappings', () => {
       'AssessmentTemplate',
       'Audit',
     ],
+    directives: [
+      'Standard',
+      'Regulation',
+    ],
     workflow: [
       'CycleTaskGroupObjectTask',
       'TaskGroup',
@@ -88,10 +92,10 @@ describe('Mappings', () => {
     Program: [...modules.core, ...modules.workflow, 'Audit', 'Document',
       'Person', 'Program'],
     Project: coreObjectsRules,
-    Regulation: loDifference(coreObjectsRules, ['Regulation']),
+    Regulation: loDifference(coreObjectsRules, modules.directives),
     Requirement: coreObjectsRules,
     Risk: coreObjectsRules,
-    Standard: loDifference(coreObjectsRules, ['Standard']),
+    Standard: loDifference(coreObjectsRules, modules.directives),
     System: coreObjectsRules,
     TaskGroup: [...modules.core, 'Program', 'Workflow'],
     TaskGroupTask: ['Person', 'Workflow'],
