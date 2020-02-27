@@ -4,7 +4,6 @@
 */
 
 import Cacheable from '../cacheable';
-import CaUpdate from '../mixins/ca-update';
 import Proposable from '../mixins/proposable';
 import Reviewable from '../mixins/reviewable';
 import RelatedAssessmentsLoader from '../mixins/related-assessments-loader';
@@ -16,11 +15,7 @@ export default Cacheable.extend({
   category: 'governance',
   findAll: 'GET /api/controls',
   findOne: 'GET /api/controls/{id}',
-  create: 'POST /api/controls',
-  update: 'PUT /api/controls/{id}',
-  destroy: 'DELETE /api/controls/{id}',
   mixins: [
-    CaUpdate,
     Proposable,
     Reviewable,
     RelatedAssessmentsLoader,

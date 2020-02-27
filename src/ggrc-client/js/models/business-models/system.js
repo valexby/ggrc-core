@@ -5,7 +5,6 @@
 
 import Cacheable from '../cacheable';
 import Questionnaire from '../mixins/questionnaire';
-import Stub from '../stub';
 import ChangeableExternally from '../mixins/changeable-externally';
 import DisableAddComments from '../mixins/disable-add-comments';
 
@@ -15,9 +14,6 @@ export default Cacheable.extend({
   category: 'scope',
   findAll: 'GET /api/systems',
   findOne: 'GET /api/systems/{id}',
-  create: 'POST /api/systems',
-  update: 'PUT /api/systems/{id}',
-  destroy: 'DELETE /api/systems/{id}',
   mixins: [
     Questionnaire,
     ChangeableExternally,
@@ -26,16 +22,6 @@ export default Cacheable.extend({
   migrationDate: '02/24/2020',
   is_custom_attributable: true,
   isRoleable: true,
-  attributes: {
-    context: Stub,
-    modified_by: Stub,
-    network_zone: Stub,
-  },
-  defaults: {
-    title: '',
-    url: '',
-    status: 'Draft',
-  },
   tree_view_options: {
     attr_list: Cacheable.attr_list.concat([
       {

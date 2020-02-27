@@ -4,7 +4,6 @@
 */
 
 import Cacheable from '../cacheable';
-import AccessControlList from '../mixins/access-control-list';
 import Proposable from '../mixins/proposable';
 import ChangeableExternally from '../mixins/changeable-externally';
 
@@ -20,13 +19,9 @@ export default Cacheable.extend({
   table_singular: 'standard',
   findAll: 'GET /api/standards',
   findOne: 'GET /api/standards/{id}',
-  create: 'POST /api/standards',
-  update: 'PUT /api/standards/{id}',
-  destroy: 'DELETE /api/standards/{id}',
   is_custom_attributable: true,
   isRoleable: true,
   mixins: [
-    AccessControlList,
     ChangeableExternally,
     Proposable,
   ],
