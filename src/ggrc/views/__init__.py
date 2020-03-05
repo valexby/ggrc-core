@@ -36,6 +36,7 @@ from ggrc.utils.contributed_objects import CONTRIBUTED_OBJECTS
 from ggrc.views import external_mappings  # noqa: F401
 from ggrc.views import saved_searches  # noqa: F401
 from ggrc.views import bulk_operations  # noqa: F401
+from ggrc.views import assessment_externalization  # noqa: F401
 from ggrc.views import converters, cron, filters, notifications, registry, \
     utils, serializers, folder
 
