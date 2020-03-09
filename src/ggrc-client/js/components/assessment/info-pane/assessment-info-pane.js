@@ -78,7 +78,9 @@ import {relatedAssessmentsTypes} from '../../../plugins/utils/models-utils';
 import {notifier, notifierXHR} from '../../../plugins/utils/notifiers-utils';
 import Evidence from '../../../models/business-models/evidence';
 import * as businessModels from '../../../models/business-models';
-import {getAjaxErrorInfo} from '../../../plugins/utils/errors-utils';
+import {getAjaxErrorInfo, handleAjaxError} from '../../../plugins/utils/errors-utils';
+
+import {ggrcAjax} from '../../../plugins/ajax-extensions';
 
 const SEMI_RESTRICTED_STATUSES = ['Deprecated', 'Completed'];
 
@@ -626,6 +628,19 @@ export default canComponent.extend({
     setCurrentState(state) {
       this.attr('currentState', state);
     },
+    async onClick() {
+      try {
+        await ggrcAjax({
+          url: `/api/assessments/externalize/${this.instance.id}`,
+          type: 'POST',
+          dataType: 'json',
+        });
+      } catch (error) {
+        if (error.status === 400) {
+          handleAjaxError(error);
+        }
+      }
+    },
     onStateChange: function (event) {
       const isUndo = event.undo;
       const newStatus = event.state;
@@ -829,3 +844,11 @@ export default canComponent.extend({
     },
   },
 });
+
+window.createExternalAuditors = function () {
+  ggrcAjax({
+    url: `/api/people/create_external_auditors`,
+    type: 'POST',
+    dataType: 'json',
+  });
+};
