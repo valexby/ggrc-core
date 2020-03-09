@@ -59,6 +59,12 @@ def externalize_assessment(assessment_id):
         "Verifiers",
     )
 
+  for ac_person in internal_assessment.get_acl_with_role_name("Assignees").access_control_people:
+     external_assessment.add_person_with_role_name(
+        ac_person.person,
+        "Assignees",
+    )
+
   db.session.add(external_assessment)
   db.session.flush()
 
@@ -69,6 +75,17 @@ def externalize_assessment(assessment_id):
           Relationship.destination_type == "Snapshot",
       ),
   ).first()
+
+  if internal_snapshot_relationship is None:
+    db.session.rollback()
+
+    return app.make_response(
+        (
+            "Audit is not mapped to any object",
+            400,
+            [("Content-Type", "text/json")],
+        ),
+    )
 
   external_snapshot_relationship = Relationship(
       destination_type=internal_snapshot_relationship.destination_type,

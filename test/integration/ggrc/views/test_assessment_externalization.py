@@ -2,11 +2,11 @@
 # Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
 # pylint: disable=missing-docstring,invalid-name
 
-from integration import ggrc
-from integration.ggrc.models import factories
-
 from ggrc.models.assessment import Assessment
 from ggrc.views.assessment_externalization import _EXTERNALIZED_ATTRS
+
+from integration import ggrc
+from integration.ggrc.models import factories
 
 
 class TestAssessmentExternalization(ggrc.TestCase):
@@ -19,6 +19,15 @@ class TestAssessmentExternalization(ggrc.TestCase):
     with factories.single_commit():
       audit = factories.AuditFactory()
       asmt = factories.AssessmentFactory(audit=audit)
+      audit_tester = factories.PersonFactory(
+        name="artsioma",
+        email="artsioma@google.com",
+      )
+
+      asmt.add_person_with_role_name(
+          audit_tester,
+          "Assignees",
+      )
 
       asmt_id = asmt.id
 
@@ -66,9 +75,24 @@ class TestAssessmentExternalization(ggrc.TestCase):
     )
 
     self.assertEqual(
-        len(internal_assessment.access_control_list), 0,
+        len(internal_assessment.access_control_list), 1,
     )
-
     self.assertEqual(
         len(external_assessment.access_control_list), 3,
+    )
+    self.assertEqual(
+        len(internal_assessment.get_acl_with_role_name("Assignees").access_control_people),
+        1,
+    )
+    self.assertEqual(
+        len(external_assessment.get_acl_with_role_name("Assignees").access_control_people),
+        1,
+    )
+    self.assertEqual(
+        len(internal_assessment.get_acl_with_role_name("Verifiers").access_control_people),
+        0,
+    )
+    self.assertEqual(
+        len(external_assessment.get_acl_with_role_name("Verifiers").access_control_people),
+        2,
     )
