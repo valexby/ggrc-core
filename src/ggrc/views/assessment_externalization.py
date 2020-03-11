@@ -1,9 +1,12 @@
 # Copyright (C) 2020 Google Inc.
 # Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
 
+import json
+
 from sqlalchemy import and_
 
 from ggrc import db
+from ggrc import login
 from ggrc.app import app
 from ggrc.models.assessment import Assessment
 from ggrc.models.relationship import Relationship
@@ -22,8 +25,9 @@ _EXTERNALIZED_ATTRS = [
 
 
 _EXTERNAL_AUDITORS = [
-    "mikitah@google.com",
     "pglebov@google.com",
+    "mikitah@google.com",
+    "khatkovski@google.com",
 ]
 
 
@@ -47,7 +51,7 @@ def externalize_assessment(assessment_id):
   if len(external_auditors) != len(_EXTERNAL_AUDITORS):
     return app.make_response(
         (
-            "External auditors do not exist. Please create",
+            json.dumps({"message": "External auditors do not exist. Please create"}),
             400,
             [("Content-Type", "text/json")],
         ),
@@ -76,12 +80,20 @@ def externalize_assessment(assessment_id):
       ),
   ).first()
 
+  internal_audit_relationship = Relationship.query.filter(
+      and_(
+          Relationship.source_type == internal_assessment.type,
+          Relationship.source_id == internal_assessment.id,
+          Relationship.destination_type == "Audit",
+      ),
+  ).first()
+
   if internal_snapshot_relationship is None:
     db.session.rollback()
 
     return app.make_response(
         (
-            "Audit is not mapped to any object",
+            json.dumps({"message": "Audit is not mapped to any object"}),
             400,
             [("Content-Type", "text/json")],
         ),
@@ -92,14 +104,24 @@ def externalize_assessment(assessment_id):
       destination_id=internal_snapshot_relationship.destination_id,
       source_type=internal_snapshot_relationship.source_type,
       source_id=external_assessment.id,
+      modified_by_id=login.get_current_user().id,
   )
 
+  external_audit_relationship = Relationship(
+      destination_type=internal_audit_relationship.destination_type,
+      destination_id=internal_audit_relationship.destination_id,
+      source_type=internal_audit_relationship.source_type,
+      source_id=external_assessment.id,
+      modified_by_id=login.get_current_user().id,
+  )
+
+  db.session.add(external_audit_relationship)
   db.session.add(external_snapshot_relationship)
   db.session.commit()
 
   return app.make_response(
       (
-          "Assessment successfully externalized",
+          json.dumps({"message": "Assessment successfully externalized"}),
           200,
           [("Content-Type", "text/json")],
       ),
@@ -120,7 +142,7 @@ def create_external_auditors():
 
   return app.make_response(
       (
-          "External auditors successfully created",
+          json.dumps({"message": "External auditors successfully created"}),
           200,
           [("Content-Type", "text/json")],
       ),

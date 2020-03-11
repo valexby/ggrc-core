@@ -177,7 +177,7 @@ Copyright (C) 2020 Google Inc.
           <div class="navigation-item">
             <a rel="tooltip" title="Release to external"
               class="btn btn-small btn-white object-state-toolbar__item"
-              on:click="onClick">
+              on:click="onExternalize">
                 Release to external
             </a>
           </div>

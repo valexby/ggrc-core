@@ -2,8 +2,13 @@
 # Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
 # pylint: disable=missing-docstring,invalid-name
 
+import json
+
 from ggrc.models.assessment import Assessment
-from ggrc.views.assessment_externalization import _EXTERNALIZED_ATTRS
+from ggrc.views.assessment_externalization import (
+    _EXTERNALIZED_ATTRS,
+    _EXTERNAL_AUDITORS,
+)
 
 from integration import ggrc
 from integration.ggrc.models import factories
@@ -31,10 +36,10 @@ class TestAssessmentExternalization(ggrc.TestCase):
 
       asmt_id = asmt.id
 
-      factories.RelationshipFactory(source=audit, destination=asmt)
-
       control = factories.ControlFactory()
       snapshot = self._create_snapshots(audit, [control])[0]
+
+      factories.RelationshipFactory(source=asmt, destination=audit)
       factories.RelationshipFactory(source=asmt, destination=snapshot)
 
     response = self._api.client.post(
@@ -42,7 +47,7 @@ class TestAssessmentExternalization(ggrc.TestCase):
     )
 
     self.assertEqual(
-        response.data,
+        json.loads(response.data)["message"],
         "External auditors successfully created",
     )
 
@@ -51,7 +56,7 @@ class TestAssessmentExternalization(ggrc.TestCase):
     )
 
     self.assertEqual(
-        response.data,
+        json.loads(response.data)["message"],
         "Assessment successfully externalized",
     )
 
@@ -75,10 +80,21 @@ class TestAssessmentExternalization(ggrc.TestCase):
     )
 
     self.assertEqual(
+        internal_assessment.related_destinations[1].destination_type,
+        external_assessment.related_destinations[1].destination_type,
+    )
+
+    self.assertEqual(
+        internal_assessment.related_destinations[1].destination_id,
+        external_assessment.related_destinations[1].destination_id,
+    )
+
+
+    self.assertEqual(
         len(internal_assessment.access_control_list), 1,
     )
     self.assertEqual(
-        len(external_assessment.access_control_list), 3,
+        len(external_assessment.access_control_list), 1 + len(_EXTERNAL_AUDITORS),
     )
     self.assertEqual(
         len(internal_assessment.get_acl_with_role_name("Assignees").access_control_people),
@@ -94,5 +110,5 @@ class TestAssessmentExternalization(ggrc.TestCase):
     )
     self.assertEqual(
         len(external_assessment.get_acl_with_role_name("Verifiers").access_control_people),
-        2,
+        len(_EXTERNAL_AUDITORS),
     )

@@ -247,7 +247,8 @@ export default canComponent.extend({
             this.attr('isUpdatingEvidences') ||
             this.attr('isUpdatingUrls') ||
             this.attr('isUpdatingComments') ||
-            this.attr('isAssessmentSaving');
+            this.attr('isAssessmentSaving') ||
+            this.attr('isExternalizeBeingCreated');
         },
       },
       noItemsText: {
@@ -264,6 +265,7 @@ export default canComponent.extend({
     pubSub,
     _verifierRoleId: undefined,
     isUpdatingRelatedItems: false,
+    isExternalizeBeingCreated: false,
     isUpdatingState: false,
     isAssessmentSaving: false,
     onStateChangeDfd: {},
@@ -628,18 +630,20 @@ export default canComponent.extend({
     setCurrentState(state) {
       this.attr('currentState', state);
     },
-    async onClick() {
+    async onExternalize() {
+      this.attr('isExternalizeBeingCreated', true);
       try {
-        await ggrcAjax({
+        const message = await ggrcAjax({
           url: `/api/assessments/externalize/${this.instance.id}`,
           type: 'POST',
-          dataType: 'json',
         });
+        notifier('info', message);
       } catch (error) {
         if (error.status === 400) {
           handleAjaxError(error);
         }
       }
+      this.attr('isExternalizeBeingCreated', false);
     },
     onStateChange: function (event) {
       const isUndo = event.undo;
@@ -845,10 +849,9 @@ export default canComponent.extend({
   },
 });
 
-window.createExternalAuditors = function () {
-  ggrcAjax({
-    url: `/api/people/create_external_auditors`,
+window.createExternalAuditors = async function () {
+  await ggrcAjax({
+    url: '/api/people/create_external_auditors',
     type: 'POST',
-    dataType: 'json',
   });
 };
