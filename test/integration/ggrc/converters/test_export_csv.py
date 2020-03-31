@@ -12,6 +12,7 @@ from ggrc import utils
 from ggrc.converters import get_exportables
 from ggrc.integrations import constants
 from ggrc.models import inflector, all_models
+from ggrc.models.mixins import WithNetworkZone
 from ggrc.models.reflection import AttributeInfo
 from integration.ggrc import TestCase
 from integration.ggrc.models import factories
@@ -316,7 +317,9 @@ class TestExportEmptyTemplate(TestCase):
     response = self.client.post("/_service/export_csv",
                                 data=dumps(data), headers=self.headers)
     self.assertIn("Allowed values are:\n{}".format('\n'.join(
-        all_models.SystemOrProcess.NZ_OPTIONS)), response.data)
+        WithNetworkZone.NZ_OPTIONS
+    )), response.data
+    )
 
   @ddt.data("Assessment", "Issue")
   def test_delete_tip_in_export_csv(self, model):
