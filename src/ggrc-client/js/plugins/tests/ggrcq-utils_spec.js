@@ -6,6 +6,7 @@
 import loDifference from 'lodash/difference';
 import {
   getUrl,
+  getInfoUrl,
   getMappingUrl,
   getUnmappingUrl,
   isMappableExternally,
@@ -22,6 +23,8 @@ import Control from '../../models/business-models/control';
 import Risk from '../../models/business-models/risk';
 import Standard from '../../models/business-models/standard';
 import AccessGroup from '../../models/business-models/access-group';
+import Product from '../../models/business-models/product';
+import Market from '../../models/business-models/market';
 import TechnologyEnvironment
   from '../../models/business-models/technology-environment';
 
@@ -133,6 +136,39 @@ describe('GGRCQ utils', () => {
 
       expect(getUrl(options))
         .toBe(`${GGRC.GGRC_Q_INTEGRATION_URL}import`);
+    });
+  });
+
+  describe('getInfoUrl util', () => {
+    it('should return url for Control', () => {
+      const instance = makeFakeInstance({model: Control})({
+        type: 'Control',
+        slug: 'CONTROL-1',
+      });
+
+      const url = GGRC.GGRC_Q_INTEGRATION_URL +
+        'controls/control=control-1/info';
+      expect(getInfoUrl(instance)).toBe(url);
+    });
+
+    it('should return url for scoping objects', () => {
+      let instance = makeFakeInstance({model: Product})({
+        type: 'Product',
+        slug: 'PRODUCT-1',
+      });
+
+      let url = GGRC.GGRC_Q_INTEGRATION_URL +
+        'questionnaires/product=product-1';
+      expect(getInfoUrl(instance)).toBe(url);
+
+      instance = makeFakeInstance({model: Market})({
+        type: 'Market',
+        slug: 'MARKET-1',
+      });
+
+      url = GGRC.GGRC_Q_INTEGRATION_URL +
+        'questionnaires/market=market-1';
+      expect(getInfoUrl(instance)).toBe(url);
     });
   });
 
