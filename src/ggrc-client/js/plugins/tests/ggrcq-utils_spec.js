@@ -9,6 +9,7 @@ import {
   getInfoUrl,
   getMappingUrl,
   getUnmappingUrl,
+  getChangeLogUrl,
   isMappableExternally,
   getCreateObjectUrl,
 } from '../utils/ggrcq-utils';
@@ -169,6 +170,39 @@ describe('GGRCQ utils', () => {
       url = GGRC.GGRC_Q_INTEGRATION_URL +
         'questionnaires/market=market-1';
       expect(getInfoUrl(instance)).toBe(url);
+    });
+  });
+
+  describe('getChangeLogUrl util', () => {
+    it('should return url for Control', () => {
+      const instance = makeFakeInstance({model: Control})({
+        type: 'Control',
+        slug: 'CONTROL-1',
+      });
+
+      const url = GGRC.GGRC_Q_INTEGRATION_URL +
+        'controls/control=control-1/change-log';
+      expect(getChangeLogUrl(instance)).toBe(url);
+    });
+
+    it('should return url for scoping objects', () => {
+      let instance = makeFakeInstance({model: Product})({
+        type: 'Product',
+        slug: 'PRODUCT-1',
+      });
+
+      let url = GGRC.GGRC_Q_INTEGRATION_URL +
+        'questionnaires/product=product-1/change-log';
+      expect(getChangeLogUrl(instance)).toBe(url);
+
+      instance = makeFakeInstance({model: Market})({
+        type: 'Market',
+        slug: 'MARKET-1',
+      });
+
+      url = GGRC.GGRC_Q_INTEGRATION_URL +
+        'questionnaires/market=market-1/change-log';
+      expect(getChangeLogUrl(instance)).toBe(url);
     });
   });
 
