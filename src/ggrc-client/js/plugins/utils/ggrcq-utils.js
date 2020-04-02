@@ -103,6 +103,13 @@ function getQuestionsUrl(instance) {
  * @return {String} Url to info view
  */
 function getInfoUrl(instance) {
+  const model = instance.constructor.model_singular;
+  const isScoping = scopingObjects.includes(model);
+
+  if (isScoping) {
+    return getQuestionsUrl(instance);
+  }
+
   return getUrl({
     model: instance.constructor.table_singular,
     path: instance.constructor.table_plural,
@@ -170,9 +177,14 @@ function getProposalsUrl(instance) {
  * @return {String} Url to change log view
  */
 function getChangeLogUrl(instance) {
+  const model = instance.constructor.model_singular;
+  const isScoping = scopingObjects.includes(model);
+
+  const path = isScoping ? 'questionnaires' : instance.constructor.table_plural;
+
   return getUrl({
     model: instance.constructor.table_singular,
-    path: instance.constructor.table_plural,
+    path,
     slug: instance.slug,
     view: 'change-log',
   });
