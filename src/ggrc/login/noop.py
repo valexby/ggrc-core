@@ -7,8 +7,9 @@ Login as example user for development mode.
 """
 
 import json
+
 import flask_login
-from flask import url_for, redirect, request, session, g, flash
+from flask import url_for, redirect, request, session, g
 
 from ggrc.login import common
 
@@ -42,15 +43,8 @@ def before_request(*args, **kwargs):  # pylint:disable=unused-argument
 
 def login():
   """Logs in current user."""
-  from ggrc.login.common import get_next_url
-  db_user = get_user()
-  common.commit_user_and_role(db_user)
-  if db_user.system_wide_role != 'No Access':
-    flask_login.login_user(db_user)
-    return redirect(get_next_url(request, default_url=url_for('dashboard')))
-  flash(u'You do not have access. Please contact your administrator.',
-        'alert alert-info')
-  return redirect('/')
+  user = get_user()
+  return common.login_user(user)
 
 
 def logout():

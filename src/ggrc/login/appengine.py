@@ -16,14 +16,12 @@ E.g., ``login: required`` must be specified *at least* for the '/login' route.
 
 import logging
 
-from google.appengine.api import users
-
 import flask
 import flask_login
+from google.appengine.api import users
 
 from ggrc.login import common
 from ggrc.utils.user_generator import find_or_create_user_by_email
-
 
 logger = logging.getLogger(__name__)
 
@@ -40,15 +38,7 @@ def get_user():
 def login():
   """Log in current user."""
   user = get_user()
-  common.commit_user_and_role(user)
-  if user.system_wide_role != 'No Access':
-    flask_login.login_user(user)
-    return flask.redirect(common.get_next_url(
-        flask.request, default_url=flask.url_for('dashboard')))
-
-  flask.flash(u'You do not have access. Please contact your administrator.',
-              'alert alert-info')
-  return flask.redirect('/')
+  return common.login_user(user)
 
 
 def logout():
