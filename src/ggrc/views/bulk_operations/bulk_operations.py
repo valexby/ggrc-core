@@ -62,8 +62,11 @@ def bulk_cavs_search():
 
 def _detect_files(data):
   """Checks if we need to attach files"""
-  return any(attr["extra"].get("files")
-             for attr in data["attributes"] if attr["extra"])
+  return any(
+      value["extra"].get("files")
+      for attr in data["attributes"]
+      for value in attr["values"] if value["extra"]
+  )
 
 
 def _log_import(data):
@@ -80,23 +83,40 @@ def _log_import(data):
         logger.error("Errors during bulk operations %s", block[message])
 
 
+def _bulk_save(data):
+  """Bulk save action
+
+  Args:
+    data: request data which contains objects and update data
+  Returns:
+    builder: csvbuilder.MatrixCsvBuilder instance
+    update_attrs: import response after bulk operation
+  """
+  with benchmark("Create CsvBuilder"):
+    builder = csvbuilder.MatrixCsvBuilder(data)
+
+  with benchmark("Prepare import data for attributes update"):
+    update_data = builder.attributes_update_to_csv()
+
+  with benchmark("Update assessments attributes"):
+    update_attrs = converters.make_import(
+        csv_data=update_data,
+        dry_run=False,
+        bulk_import=True
+    )
+
+  _log_import(update_attrs["data"])
+
+  return builder, update_attrs
+
+
 @app.route("/_background_tasks/bulk_complete", methods=["POST"])
 @background_task.queued_task
 def bulk_complete(task):
   """Process bulk complete"""
   flask.session['credentials'] = task.parameters.get("credentials")
 
-  with benchmark("Create CsvBuilder"):
-    builder = csvbuilder.MatrixCsvBuilder(task.parameters.get("data", {}))
-
-  with benchmark("Prepare import data for attributes update"):
-    update_data = builder.attributes_update_to_csv()
-
-  with benchmark("Update assessments attributes"):
-    update_attrs = converters.make_import(csv_data=update_data,
-                                          dry_run=False,
-                                          bulk_import=True)
-    _log_import(update_attrs["data"])
+  builder, update_attrs = _bulk_save(task.parameters.get("data", {}))
 
   upd_errors = set(update_attrs["failed_slugs"])
 
@@ -160,28 +180,12 @@ def bulk_verify(task):
 @background_task.queued_task
 def bulk_cavs_save(task):
   """Process bulk cavs save"""
-  with benchmark("Create CsvBuilder"):
-    builder = csvbuilder.MatrixCsvBuilder(task.parameters.get("data", {}))
+  builder, update_attrs = _bulk_save(task.parameters.get("data", {}))
 
-  with benchmark("Prepare import data for attributes update"):
-    update_data = builder.attributes_update_to_csv()
-
-  with benchmark("Update assessments attributes"):
-    import_arguments = {
-        "csv_data": update_data,
-        "dry_run": False,
-        "bulk_import": True,
-    }
-
-    update_attrs = converters.make_import(**import_arguments)
-
-  _log_import(update_attrs["data"])
-
-  upd_errors = set(update_attrs["failed_slugs"])
   bulk_notifications.send_notification(
-      update_errors=upd_errors,
+      update_errors=set(update_attrs["failed_slugs"]),
       partial_errors={},
-      asmnt_ids=[asmt.id for asmt in builder.assessments],
+      asmnt_ids=list(builder.assessments.keys()),
   )
 
   return app.make_response(('success', 200, [("Content-Type", "text/json")]))

@@ -5,7 +5,6 @@
 
 import json
 import mock
-import unittest
 import ddt
 
 from ggrc import models
@@ -24,19 +23,21 @@ class TestBulkOperations(ggrc.TestCase):
     self.object_generator = generator.ObjectGenerator()
     self.init_taskqueue()
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   def test_successfully_completed(self):
     """Test all assessments completed successfully"""
     with factories.single_commit():
-      asmts_ids = []
-      for _ in range(2):
-        asmts_ids.append(factories.AssessmentFactory(status="Not Started").id)
+      asmt1 = factories.AssessmentFactory(status="Not Started")
+      asmt2 = factories.AssessmentFactory(status="Not Started")
 
     data = {
-        "assessments_ids": asmts_ids,
-        "attributes": [],
+        "assessments_ids": [asmt1.id, asmt2.id],
+        "attributes": [{
+            "assessment": {"id": asmt1.id, "slug": asmt1.slug},
+            "values": []
+        }, {
+            "assessment": {"id": asmt2.id, "slug": asmt2.slug},
+            "values": []
+        }],
     }
 
     response = self.client.post("/api/bulk_operations/complete",
@@ -49,9 +50,6 @@ class TestBulkOperations(ggrc.TestCase):
     for assessment in assessments:
       self.assertEqual(assessment.status, "Completed")
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   def test_successfully_in_review(self):
     """Test all assessments were moved to In review state successfully"""
     with factories.single_commit():
@@ -65,7 +63,10 @@ class TestBulkOperations(ggrc.TestCase):
 
     data = {
         "assessments_ids": asmts_ids,
-        "attributes": [],
+        "attributes": [{
+            "assessment": {"id": asmt.id, "slug": asmt.slug},
+            "values": []
+        } for asmt in assmts],
     }
 
     response = self.client.post("/api/bulk_operations/complete",
@@ -131,9 +132,6 @@ class TestBulkOperations(ggrc.TestCase):
     for assessment in assessments:
       self.assertEqual(assessment.status, "In Review")
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   def test_partly_successfully(self):
     """Test one assessment moved to completed state and other not changed"""
     with factories.single_commit():
@@ -149,7 +147,13 @@ class TestBulkOperations(ggrc.TestCase):
 
     data = {
         "assessments_ids": [success_id, failed_id],
-        "attributes": [],
+        "attributes": [{
+            "assessment": {"id": success_id, "slug": success_assmt.slug},
+            "values": []
+        }, {
+            "assessment": {"id": failed_id, "slug": failed_assmt.slug},
+            "values": []
+        }],
     }
 
     response = self.client.post("/api/bulk_operations/complete",
@@ -162,41 +166,48 @@ class TestBulkOperations(ggrc.TestCase):
     success = models.Assessment.query.get(success_id).status
     self.assertEqual(success, "Completed")
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   def test_mapped_comment(self):
     """Test assessment successfully completed after LCA comment mapping"""
-    assmts = []
-    assmts_ids = []
     with factories.single_commit():
-      for _ in range(2):
-        assmt = factories.AssessmentFactory(status="Not Started")
-        definition = factories.CustomAttributeDefinitionFactory(
-            definition_id=assmt.id,
-            title="lca_title",
-            definition_type="assessment",
-            attribute_type="Dropdown",
-            multi_choice_options="one,two",
-            multi_choice_mandatory="1,1",
-        )
-        assmts.append((assmt, definition))
-        assmts_ids.append(assmt.id)
+      assmt1 = factories.AssessmentFactory(status="Not Started")
+      assmt2 = factories.AssessmentFactory(status="Not Started")
+      cad_payload = dict(
+          title="lca_title",
+          definition_type="assessment",
+          attribute_type="Dropdown",
+          multi_choice_options="one,two",
+          multi_choice_mandatory="1,1",
+      )
+      cad1 = factories.CustomAttributeDefinitionFactory(
+          definition_id=assmt1.id,
+          **cad_payload
+      )
+      cad2 = factories.CustomAttributeDefinitionFactory(
+          definition_id=assmt2.id,
+          **cad_payload
+      )
+      assmts = [
+          (assmt1, cad1, "comment descr1"),
+          (assmt2, cad2, "comment descr2"),
+      ]
 
-    bulk_update = [{"assessment_id": asmt.id,
-                    "attribute_definition_id": cad.id,
-                    "slug": asmt.slug} for asmt, cad in assmts]
     data = {
-        "assessments_ids": assmts_ids,
+        "assessments_ids": [assmt1.id, assmt2.id],
         "attributes": [{
-            "attribute_value": "one",
-            "attribute_title": "lca_title",
-            "attribute_type": "Dropdown",
-            "extra": {"comment": {"description": "comment descr1"},
-                      "urls": [],
-                      "files": []},
-            "bulk_update": bulk_update,
-        }],
+            "assessment": {"id": asmt.id, "slug": asmt.slug},
+            "values": [{
+                "value": "one",
+                "title": "lca_title",
+                "type": "Dropdown",
+                "definition_id": asmt.id,
+                "id": cad.id,
+                "extra": {
+                    "comment": {"description": comment_value},
+                    "urls": [],
+                    "files": []
+                },
+            }]
+        } for asmt, cad, comment_value in assmts]
     }
     self.client.post("/api/bulk_operations/complete",
                      data=json.dumps(data),
@@ -206,15 +217,10 @@ class TestBulkOperations(ggrc.TestCase):
     cad_definitions = {comment.custom_attribute_definition_id
                        for comment in comments}
     cads = models.CustomAttributeDefinition.query.all()
-    cads_ids = {cad.id for cad in cads}
-    self.assertEqual(cad_definitions, cads_ids)
-    assmts = models.Assessment.query.all()
-    for assessment in assmts:
+    self.assertEqual(cad_definitions, {cad.id for cad in cads})
+    for assessment in models.Assessment.query.all():
       self.assertEqual(assessment.status, "Completed")
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   def test_urls_mapped(self):
     """Test urls were mapped to assessments and assessments were completed"""
     assmts = []
@@ -233,20 +239,22 @@ class TestBulkOperations(ggrc.TestCase):
         assmts.append(assmt)
         assmts_ids.append(assmt.id)
 
-    bulk_update = [{"assessment_id": asmt.id,
-                    "attribute_definition_id": None,
-                    "slug": asmt.slug} for asmt in assmts]
     data = {
         "assessments_ids": assmts_ids,
         "attributes": [{
-            "attribute_value": "one",
-            "attribute_title": "lca_title",
-            "attribute_type": "Dropdown",
-            "extra": {"comment": None,
-                      "urls": ["url1"],
-                      "files": []},
-            "bulk_update": bulk_update,
-        }],
+            "assessment": {"id": asmt.id, "slug": asmt.slug},
+            "values": [{
+                "value": "one",
+                "title": "text_lca",
+                "type": "Dropdown",
+                "definition_id": asmt.id,
+                "extra": {
+                    "comment": None,
+                    "urls": ["url1"],
+                    "files": []
+                },
+            }]
+        } for asmt in assmts]
     }
     self.client.post("/api/bulk_operations/complete",
                      data=json.dumps(data),
@@ -257,9 +265,6 @@ class TestBulkOperations(ggrc.TestCase):
       self.assertEqual(urls, {"url1"})
       self.assertEqual(assmt.status, "Completed")
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   @mock.patch('ggrc.gdrive.file_actions.process_gdrive_file')
   @mock.patch('ggrc.gdrive.file_actions.get_gdrive_file_link')
   @mock.patch('ggrc.gdrive.get_http_auth')
@@ -287,20 +292,22 @@ class TestBulkOperations(ggrc.TestCase):
         assmts.append(assmt)
         assmts_ids.append(assmt.id)
 
-    bulk_update = [{"assessment_id": asmt.id,
-                    "attribute_definition_id": None,
-                    "slug": asmt.slug} for asmt in assmts]
     data = {
         "assessments_ids": assmts_ids,
         "attributes": [{
-            "attribute_value": "one",
-            "attribute_title": "lca_title",
-            "attribute_type": "Dropdown",
-            "extra": {"comment": None,
-                      "urls": [],
-                      "files": [{"source_gdrive_id": "mock_id"}]},
-            "bulk_update": bulk_update,
-        }],
+            "assessment": {"id": asmt.id, "slug": asmt.slug},
+            "values": [{
+                "value": "one",
+                "title": "lca_title",
+                "type": "Dropdown",
+                "definition_id": asmt.id,
+                "extra": {
+                    "comment": None,
+                    "urls": [],
+                    "files": [{"source_gdrive_id": "mock_id"}]
+                },
+            }]
+        } for asmt in assmts]
     }
 
     response = self.client.post("/api/bulk_operations/complete",
@@ -313,9 +320,6 @@ class TestBulkOperations(ggrc.TestCase):
       self.assertEqual(urls, {u"mock_id"})
       self.assertEqual(assmt.status, "Completed")
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   @ddt.data(
       ("Text", "abc", "abc"),
       ("Rich Text", "abc", "abc"),
@@ -344,19 +348,18 @@ class TestBulkOperations(ggrc.TestCase):
         asmts_ids.append(assmt.id)
         cads_ids.append(cad.id)
 
-    bulk_update = [{
-        "assessment_id": asmt.id,
-        "attribute_definition_id": cad_id,
-        "slug": asmt.slug} for cad_id, asmt in zip(cads_ids, asmts)]
     data = {
         "assessments_ids": asmts_ids,
         "attributes": [{
-            "attribute_value": value,
-            "attribute_title": "test_lca",
-            "attribute_type": attribute_type,
-            "extra": {},
-            "bulk_update": bulk_update,
-        }],
+            "assessment": {"id": asmt.id, "slug": asmt.slug},
+            "values": [{
+                "value": value,
+                "title": "text_lca",
+                "type": attribute_type,
+                "definition_id": asmt.id,
+                "extra": {},
+            }]
+        } for asmt in asmts]
     }
     response = self.client.post("/api/bulk_operations/complete",
                                 data=json.dumps(data),
@@ -371,9 +374,6 @@ class TestBulkOperations(ggrc.TestCase):
     for cav in cavs:
       self.assertEqual(cav.attribute_value, expected_value)
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   @ddt.data(
       ("Multiselect", "onE,tWo,Three", "One,three", "onE,Three"),
       ("Dropdown", "yes,No", "no", "No"),
@@ -400,19 +400,21 @@ class TestBulkOperations(ggrc.TestCase):
         asmts_ids.append(assmt.id)
         cads_ids.append(cad.id)
 
-    bulk_update = [{
-        "assessment_id": asmt.id,
-        "attribute_definition_id": cad_id,
-        "slug": asmt.slug} for cad_id, asmt in zip(cads_ids, asmts)]
     data = {
         "assessments_ids": asmts_ids,
         "attributes": [{
-            "attribute_value": value,
-            "attribute_title": "test_lca",
-            "attribute_type": attribute_type,
-            "extra": {},
-            "bulk_update": bulk_update,
-        }],
+            "assessment": {
+                "id": asmt.id,
+                "slug": asmt.slug,
+            },
+            "values": [{
+                "value": value,
+                "title": "text_lca",
+                "type": attribute_type,
+                "definition_id": asmt.id,
+                "extra": {},
+            }]
+        } for asmt in asmts]
     }
     response = self.client.post("/api/bulk_operations/complete",
                                 data=json.dumps(data),

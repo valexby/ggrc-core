@@ -150,6 +150,26 @@ class MatrixCsvBuilder(AbstractCsvBuilder):
     self._build_lca_block(prepared_csv)
     return prepared_csv
 
+  def assessments_complete_to_csv(self, errors):
+    """Prepare csv to complete assessments in bulk via import"""
+
+    assessments_list = []
+    for assessment in self.assessments:
+      if assessment.slug not in errors:
+        assessments_list.append([
+            u"",
+            assessment.slug,
+            u"In Review" if assessment.needs_verification else u"Completed",
+        ])
+
+    result_csv = []
+    if assessments_list:
+      result_csv.append([u"Object type"])
+      result_csv.append([u"Assessment", u"Code", u"State"])
+      result_csv.extend(assessments_list)
+
+    return result_csv
+
   def _convert_data(self):
     """Convert request data to appropriate format.
 
@@ -176,10 +196,23 @@ class MatrixCsvBuilder(AbstractCsvBuilder):
 
   def _collect_attributes(self):
     """Collect attributes if any presented."""
+    needs_verifications = []
+    if self.assessment_ids:
+      assessments = models.Assessment.query.filter(
+          models.Assessment.id.in_(self.assessment_ids)
+      ).all()
+
+      for assessment in assessments:
+        verifiers = assessment.get_person_ids_for_rolename("Verifiers")
+        if verifiers:
+          needs_verifications.append(assessment.id)
+
     for asmt in self.attr_data:
       stub = AssessmentStub()
       stub.id = asmt["assessment"]["id"]
       stub.slug = asmt["assessment"]["slug"]
+      if stub.id in needs_verifications:
+        stub.needs_verification = True
       for cav in asmt["values"]:
         cav_value = self._populate_value(
             cav["value"],

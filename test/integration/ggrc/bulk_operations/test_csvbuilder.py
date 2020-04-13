@@ -4,7 +4,6 @@
 """Test csv builder methods for assessments bulk complete"""
 
 import copy
-import unittest
 import ddt
 
 import freezegun
@@ -245,9 +244,6 @@ class TestMatrixCsvBuilder(TestCase):
     for key in data:
       setattr(assessment, key, data[key])
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   def test_needs_verification_assessment(self):
     """Test assessment needs verification"""
     with factories.single_commit():
@@ -264,25 +260,21 @@ class TestMatrixCsvBuilder(TestCase):
       )
     data = {
         "assessments_ids": [asmt.id],
-        "attributes": [
-            {
-                "attribute_value": "cav_value",
-                "attribute_title": cad_text.title,
-                "attribute_type": "Text",
+        "attributes": [{
+            "assessment": {"id": asmt.id, "slug": asmt.slug},
+            "values": [{
+                "value": "cav_value",
+                "title": cad_text.title,
+                "type": "Text",
+                "definition_id": asmt.id,
+                "id": cad_text.id,
                 "extra": {
                     "comment": {},
                     "urls": [],
-                    "files": [],
+                    "files": []
                 },
-                "bulk_update": [
-                    {
-                        "assessment_id": asmt.id,
-                        "attribute_definition_id": cad_text.id,
-                        "slug": asmt.slug,
-                    },
-                ]
-            }
-        ]
+            }]
+        }]
     }
     builder = csvbuilder.MatrixCsvBuilder(data)
     expected_data = {
@@ -298,9 +290,6 @@ class TestMatrixCsvBuilder(TestCase):
     self.assert_assessments(builder, expected_data)
     self.assertEqual(builder.assessment_ids, [asmt.id])
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   def test_needs_verification_many_assessments(self):
     """Test multiple assessments and one needs verification"""
     with factories.single_commit():
@@ -325,30 +314,33 @@ class TestMatrixCsvBuilder(TestCase):
     asmt_ids = [asmt1.id, asmt2.id]
     data = {
         "assessments_ids": asmt_ids,
-        "attributes": [
-            {
-                "attribute_value": "cav_value",
-                "attribute_title": cad1.title,
-                "attribute_type": "Text",
-                "extra": {
-                    "comment": {},
-                    "urls": [],
-                    "files": [],
-                },
-                "bulk_update": [
-                    {
-                        "assessment_id": asmt1.id,
-                        "attribute_definition_id": cad1.id,
-                        "slug": asmt1.slug,
-                    },
-                    {
-                        "assessment_id": asmt2.id,
-                        "attribute_definition_id": cad2.id,
-                        "slug": asmt2.slug,
-                    },
-                ]
+        "attributes": [{
+            "assessment": {
+                "id": asmt1.id,
+                "slug": asmt1.slug,
             },
-        ]
+            "values": [{
+                "value": "cav_value",
+                "title": cad1.title,
+                "type": "Text",
+                "definition_id": asmt1.id,
+                "id": cad1.id,
+                "extra": {},
+            }]
+        }, {
+            "assessment": {
+                "id": asmt2.id,
+                "slug": asmt2.slug,
+            },
+            "values": [{
+                "value": "cav_value",
+                "title": cad2.title,
+                "type": "Text",
+                "definition_id": asmt2.id,
+                "id": cad2.id,
+                "extra": {},
+            }]
+        }]
     }
     builder = csvbuilder.MatrixCsvBuilder(data)
     expected_data = {
@@ -372,9 +364,6 @@ class TestMatrixCsvBuilder(TestCase):
     self.assert_assessments(builder, expected_data)
     self.assertEqual(set(builder.assessment_ids), set(asmt_ids))
 
-  @unittest.skip(
-      "Implementing transition to MatrixCsvBuilder for bulk operations"
-  )
   def test_needs_verification_two_diff_cads(self):
     """Test two cads from two assessments"""
     with factories.single_commit():
@@ -399,42 +388,33 @@ class TestMatrixCsvBuilder(TestCase):
     asmt_ids = [asmt1.id, asmt2.id]
     data = {
         "assessments_ids": asmt_ids,
-        "attributes": [
-            {
-                "attribute_value": "cav_value_1",
-                "attribute_title": cad1.title,
-                "attribute_type": "Text",
-                "extra": {
-                    "comment": {},
-                    "urls": [],
-                    "files": [],
-                },
-                "bulk_update": [
-                    {
-                        "assessment_id": asmt1.id,
-                        "attribute_definition_id": cad1.id,
-                        "slug": asmt1.slug,
-                    },
-                ]
+        "attributes": [{
+            "assessment": {
+                "id": asmt1.id,
+                "slug": asmt1.slug,
             },
-            {
-                "attribute_value": "cav_value_2",
-                "attribute_title": cad2.title,
-                "attribute_type": "Text",
-                "extra": {
-                    "comment": {},
-                    "urls": [],
-                    "files": [],
-                },
-                "bulk_update": [
-                    {
-                        "assessment_id": asmt2.id,
-                        "attribute_definition_id": cad2.id,
-                        "slug": asmt2.slug,
-                    },
-                ]
-            }
-        ]
+            "values": [{
+                "value": "cav_value_1",
+                "title": cad1.title,
+                "type": "Text",
+                "definition_id": asmt1.id,
+                "id": cad1.id,
+                "extra": {},
+            }]
+        }, {
+            "assessment": {
+                "id": asmt2.id,
+                "slug": asmt2.slug,
+            },
+            "values": [{
+                "value": "cav_value_2",
+                "title": cad2.title,
+                "type": "Text",
+                "definition_id": asmt2.id,
+                "id": cad2.id,
+                "extra": {},
+            }]
+        }]
     }
     builder = csvbuilder.MatrixCsvBuilder(data)
 
